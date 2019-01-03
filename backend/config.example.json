@@ -1,0 +1,18 @@
+{
+  "database": {
+    "host": "127.0.0.1",
+    "user": "backend",
+    "database": "backend",
+    "password": "<DB-PASS>"
+  },
+  "email": {
+    "service": "gmail",
+    "host": "smtp.gmail.com",
+    "user": "<EMAIL-USER>",
+    "pass": "<EMAIL-PASS>"
+  },
+  "gmaps": {
+    "key": "<GOOGLE-MAPS-STATIC-KEY>"
+  },
+  "domain": "http://localhost:3000"
+}
