@@ -18,6 +18,7 @@ class ActivityWidgetState extends State<ActivityWidget> {
   FirebaseUser _user;
   bool _loading = true;
   bool _silentReload = false;
+  Timer _silentReloadTimer;
   dynamic _activities;
 
   ActivityWidgetState(FirebaseUser user) {
@@ -27,9 +28,12 @@ class ActivityWidgetState extends State<ActivityWidget> {
   void _loadActivities() async {
     try {
       BackendStatusResponse activityResponse = await FirebaseBackend
-          .getActivity(await _user.getIdToken()).timeout(Duration(seconds: 8));
+          .getActivity(await _user.getIdToken()).timeout(Duration(seconds: 7));
 
       _activities = activityResponse.raw['activity'];
+      if(_silentReloadTimer != null) {
+        _silentReloadTimer.cancel();
+      }
       setState(() {
         _loading = false;
         _silentReload = true;
@@ -115,7 +119,7 @@ class ActivityWidgetState extends State<ActivityWidget> {
   Widget build(BuildContext context) {
     if(_silentReload) {
       _silentReload = false;
-      Timer(Duration(seconds: 10), () => _loadActivities());
+      _silentReloadTimer = Timer(Duration(seconds: 10), () => _loadActivities());
     }
     if(_loading) {
       _loadActivities();
@@ -123,14 +127,24 @@ class ActivityWidgetState extends State<ActivityWidget> {
     return Container(
       child: Column(
         children: <Widget>[
-          Text(
-            'Recent Activity',
-            style: TextStyle(fontSize: 20.0),
-//            textAlign: TextAlign.left,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              Text(
+                'Recent Activity',
+                style: TextStyle(fontSize: 20.0),
+              ),
+              IconButton(
+                icon: Icon(Icons.refresh),
+                tooltip: 'Refresh Activity',
+                onPressed: () {
+                  setState(() {
+                    _loading = true;
+                  });
+                },
+              )
+            ],
           ),
-//          Container(
-//            padding: EdgeInsets.only(top: 10.0)
-//          ),
           Divider(),
           () {
             if(!_loading) return _buildActivityList();
