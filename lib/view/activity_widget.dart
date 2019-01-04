@@ -25,25 +25,57 @@ class ActivityWidgetState extends State<ActivityWidget> {
   }
 
   void _loadActivities() async {
-    BackendStatusResponse activityResponse = await FirebaseBackend.getActivity(await _user.getIdToken());
-    _activities = activityResponse.raw['activity'];
-    setState(() {
-      _loading = false;
-      _silentReload = true;
-    });
+    try {
+      BackendStatusResponse activityResponse = await FirebaseBackend
+          .getActivity(await _user.getIdToken()).timeout(Duration(seconds: 8));
+
+      _activities = activityResponse.raw['activity'];
+      setState(() {
+        _loading = false;
+        _silentReload = true;
+      });
+    } on TimeoutException catch(_) {
+      setState(() {
+        _loading = false;
+        _activities = null;
+      });
+    }
   }
   Widget _buildActivityList() {
     List<Widget> cardList = [];
-    for(int i=0; i<_activities.length; i++) {
-      cardList.add(_buildActivityCard(FirebaseBackend.typeToIcon(_activities[i]['type']), _activities[i]['title'], _activities[i]['summary'], _activities[i]['message']));
-    }
-    if(cardList.length == 0) {
+    if(_activities == null) {
       cardList = [
-        Container(
-          padding: EdgeInsets.all(12.0),
-          child: Text('Recent activity will show up here. This includes when you check in, and when others check in with you', style: TextStyle(fontStyle: FontStyle.italic))
+        Text('We were unable to contact our servers. Please check your internet connection'),
+        RaisedButton(
+            child: Text('Try Again'),
+            onPressed: () {
+              setState(() {
+                _loading = true;
+              });
+//              Timer(Duration(milliseconds: 500), () {
+//                _getRecipients();
+//              });
+            }
         )
       ];
+    }
+    else {
+      for (int i = 0; i < _activities.length; i++) {
+        cardList.add(_buildActivityCard(
+            FirebaseBackend.typeToIcon(_activities[i]['type']),
+            _activities[i]['title'], _activities[i]['summary'],
+            _activities[i]['message']));
+      }
+      if (cardList.length == 0) {
+        cardList = [
+          Container(
+              padding: EdgeInsets.all(12.0),
+              child: Text(
+                  'Recent activity will show up here. This includes when you check in, and when others check in with you',
+                  style: TextStyle(fontStyle: FontStyle.italic))
+          )
+        ];
+      }
     }
     return Column(
       children: cardList,
@@ -85,35 +117,34 @@ class ActivityWidgetState extends State<ActivityWidget> {
       _silentReload = false;
       Timer(Duration(seconds: 10), () => _loadActivities());
     }
-//    return Text('Your recent activity will appear here, including your latest check-ins, as well as when other people add you as a recipient when they check in');
     if(_loading) {
       _loadActivities();
-      return Container(
-        padding: EdgeInsets.all(48.0),
-        child: Center(
-          child: CircularProgressIndicator()
-        )
-      );
     }
-    else {
-      return Container(
-        child: Column(
-          children: <Widget>[
-            Text(
-              'Recent Activity',
-              style: TextStyle(fontSize: 20.0),
+    return Container(
+      child: Column(
+        children: <Widget>[
+          Text(
+            'Recent Activity',
+            style: TextStyle(fontSize: 20.0),
 //            textAlign: TextAlign.left,
-            ),
+          ),
 //          Container(
 //            padding: EdgeInsets.only(top: 10.0)
 //          ),
-            Divider(),
-            _buildActivityList()
-          ],
-          crossAxisAlignment: CrossAxisAlignment.start,
-        ),
-        padding: EdgeInsets.all(12.0)
-      );
-    }
+          Divider(),
+          () {
+            if(!_loading) return _buildActivityList();
+            else return Container(
+              padding: EdgeInsets.all(24.0),
+              child: Center(
+                child: CircularProgressIndicator()
+              )
+            );
+          }()
+        ],
+        crossAxisAlignment: CrossAxisAlignment.start,
+      ),
+      padding: EdgeInsets.all(12.0)
+    );
   }
 }
