@@ -332,8 +332,8 @@ router.post('/checkIn', function(req, res) {
         }
 
         conn.execute(
-            'INSERT INTO check_in (uid, rating, message, image_id, location) VALUES (?, ?, ?, ?, ?)',
-            [decodedToken.uid, info.rating, info.message, info.image_id, info.location],
+            'INSERT INTO check_in (uid, rating, message, image_id, location, recipients) VALUES (?, ?, ?, ?, ?, ?)',
+            [decodedToken.uid, info.rating, info.message, info.image_id, info.location, recipients.join(',')],
             function(err, results, fields) {
                 if(err) {
                     res.json(responses.get('GENERIC_DB_ERROR', {}, err, decodedToken.uid, req));

@@ -422,7 +422,7 @@ class _CheckInScreenState extends State<CheckInScreen> {
         location = null;
       }
       if (locationError != null) {
-
+        print(locationError);
       }
     }
 
