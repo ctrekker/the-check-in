@@ -85,7 +85,7 @@ class ActivityWidgetState extends State<ActivityWidget> {
       children: cardList,
     );
   }
-  Widget _buildActivityCard(IconData icon, String title, String summary, String message) {
+  Widget _buildActivityCard(IconData icon, String title, String summary, dynamic message) {
     return Card(
       child: Column(
         mainAxisSize: MainAxisSize.min,
