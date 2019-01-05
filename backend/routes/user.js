@@ -39,22 +39,33 @@ router.post('/device/fcm', function(req, res) {
     }
     admin.auth().verifyIdToken(req.body.token).then(function(decodedToken) {
         conn.execute(
-            'DELETE FROM fcm_tokens WHERE device_id=?',
+            'SELECT COUNT(*) AS device_matches FROM devices WHERE device_id=?',
             [req.body.device_id],
             function(err, results, fields) {
-                if(err) {
-                    res.json(responses.get('GENERIC_DB_ERROR', {}, err, decodedToken.uid, req));
+                var device_matches = results[0]['device_matches'];
+                if(device_matches < 1) {
+                    res.json(responses.get('DEVICE_ID_INVALID', {}, null, decodedToken.uid, req));
                 }
                 else {
                     conn.execute(
-                        'INSERT INTO fcm_tokens (device_id, uid, token) VALUES (?, ?, ?)',
-                        [req.body.device_id, decodedToken.uid, req.body.fcm_token],
-                        function (err, results, fields) {
-                            if (err) {
+                        'DELETE FROM fcm_tokens WHERE device_id=?',
+                        [req.body.device_id],
+                        function(err, results, fields) {
+                            if(err) {
                                 res.json(responses.get('GENERIC_DB_ERROR', {}, err, decodedToken.uid, req));
                             }
                             else {
-                                res.json(responses.get('FCM_UPDATE_SUCCESS', {}, null, decodedToken.uid, req));
+                                conn.execute(
+                                    'INSERT INTO fcm_tokens (device_id, uid, token) VALUES (?, ?, ?)',
+                                    [req.body.device_id, decodedToken.uid, req.body.fcm_token],
+                                    function (err, results, fields) {
+                                        if (err) {
+                                            res.json(responses.get('GENERIC_DB_ERROR', {}, err, decodedToken.uid, req));
+                                        }
+                                        else {
+                                            res.json(responses.get('FCM_UPDATE_SUCCESS', {}, null, decodedToken.uid, req));
+                                        }
+                                    });
                             }
                         });
                 }

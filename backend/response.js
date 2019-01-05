@@ -54,6 +54,10 @@ var responses = {
         type: 'error',
         code: 'device/overflow'
     },
+    DEVICE_ID_INVALID: {
+        type: 'error',
+        code: 'device/invalid-id'
+    },
     DEVICE_INIT_SUCCESS: {
         type: 'success',
         code: 'device/init-success'

@@ -30,17 +30,25 @@ class FirebaseBackend {
     String jsonStr = await response.stream.bytesToString();
     return BackendStatusResponse.fromJSON(json.decode(jsonStr));
   }
-  static Future<BackendStatusResponse> updateFcmToken(String token, String fcmToken) async {
+  static Future<BackendStatusResponse> updateFcmToken(String token, String fcmToken, {bool force=false, int layer=0}) async {
     http.Client client = new http.Client();
     http.Request request = new http.Request('POST', new Uri.http(baseUrl, '/user/device/fcm'));
 
-    String device_id = await getDeviceId(token);
+    String device_id = await getDeviceId(token, force: force);
     print('device_id: '+device_id);
     request.bodyFields = {'token': token, 'device_id': device_id, 'fcm_token': fcmToken};
 
     http.StreamedResponse response = await client.send(request);
     String jsonStr = await response.stream.bytesToString();
-    return BackendStatusResponse.fromJSON(json.decode(jsonStr));
+    BackendStatusResponse res = BackendStatusResponse.fromJSON(json.decode(jsonStr));
+    if(res.code == 'device/invalid-id' && layer < 3) {
+      print('Device ID invalid. Obtaining new one');
+      return await updateFcmToken(token, fcmToken, force: true, layer: layer+1);
+    }
+    else if(layer >= 3) {
+      return res;
+    }
+    return res;
   }
   static Future<dynamic> getAllRecipients(String token) async {
     http.Client client = new http.Client();
@@ -157,9 +165,9 @@ class FirebaseBackend {
     }
     return out;
   }
-  static Future<String> getDeviceId(String token) async {
+  static Future<String> getDeviceId(String token, {bool force=false}) async {
     final prefs = await SharedPreferences.getInstance();
-    if(prefs.getKeys().contains('device_id')) {
+    if(prefs.getKeys().contains('device_id')&&!force) {
       return prefs.getString('device_id');
     }
     else {
