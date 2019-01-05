@@ -459,7 +459,7 @@ function sendPushNotifications(uid, emails, info, callback) {
     admin.auth().getUser(uid).then(function(user) {
         var title = user.displayName + ' has checked in';
         var summary = [];
-        var message = '';
+        var message = [];
         if(info.rating !== -1) {
             summary.push(user.displayName + ' gave a rating of ' + info.rating);
         }
@@ -481,12 +481,30 @@ function sendPushNotifications(uid, emails, info, callback) {
         var location = JSON.parse(info.location);
 
         // if(info.rating !== -1) message += '<p>Rating: ' + info.rating + ' stars</p>';
-        if(info.message) message += '<h2>Message</h2><p>' + info.message + '</p>';
-        if(info.image_id) message += '<h2>Image</h2><img src="' + global.domain + '/user/image/get/' + info.image_id + '"/>';
-        if(info.location) message += '<h2>Location</h2><img src="' + getMapForLocation(location) + '">';
+        if(info.message) {
+            message.push({
+                title: 'Message',
+                text: info.message
+            });
+        }
+        if(info.image_id) {
+            message.push({
+                title: 'Image',
+                image_url: global.domain + '/user/image/get/' + info.image_id
+            });
+        }
+        if(info.location) {
+            message.push({
+                title: 'Location',
+                image_url: getMapForLocation(location)
+            });
+        }
+        console.log(message);
 
-        if(message === '') {
-            message = 'No details were provided';
+        if(message.length < 1) {
+            message.push({
+                text: 'No details were provided'
+            });
         }
 
         for(var email_id = 0; email_id < emails.length; email_id++) {
