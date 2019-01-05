@@ -4,6 +4,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart' show FirebaseAuth, FirebaseUser, PlatformException;
+import 'package:health_check/util/config.dart';
 import 'package:location/location.dart';
 import 'dart:async';
 import 'dart:io';
@@ -17,6 +18,7 @@ import 'package:health_check/view/user_screen.dart' show UserScreen;
 import 'package:health_check/view/camera_view.dart';
 import 'package:health_check/util/firebase_custom.dart';
 import 'package:health_check/view/profile_screen.dart' show ProfileScreen;
+import 'package:map_view/map_view.dart' as Maps;
 
 final FirebaseAuth auth = FirebaseAuth.instance;
 FirebaseUser fuser;
@@ -25,6 +27,7 @@ FirebaseUser fuser;
 final Text appTitle = Text('The Check In');
 
 void main() {
+  Maps.MapView.setApiKey(Config.mapsApiKey);
   runApp(new MyApp());
   cameraInit();
 }

@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:health_check/util/config.dart';
 import 'package:html2md/html2md.dart' as html2md;
 import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:map_view/map_view_type.dart';
 import 'dart:convert';
+
+import 'package:map_view/static_map_provider.dart';
+import 'package:map_view/map_view.dart' as Maps;
 
 class ActivityDetailsScreen extends StatefulWidget {
   String _message;
@@ -13,6 +18,7 @@ class ActivityDetailsScreen extends StatefulWidget {
 }
 class ActivityDetailsScreenState extends State<ActivityDetailsScreen> {
   dynamic _message;
+  StaticMapProvider mapProvider = new StaticMapProvider(Config.mapsApiKey);
 
   ActivityDetailsScreenState(String message) {
     _message = json.decode(message);
@@ -41,6 +47,51 @@ class ActivityDetailsScreenState extends State<ActivityDetailsScreen> {
       if(elementData.containsKey('image_url')) {
         columnWidgets.add(Image.network(elementData['image_url']));
       }
+      if(elementData.containsKey('location')) {
+        double latitude = elementData['location']['latitude'].toDouble();
+        double longitude = elementData['location']['longitude'].toDouble();
+
+        Maps.Marker locationMarker = Maps.Marker('1', '', latitude, longitude, color: Colors.red);
+        Uri mapUri = mapProvider.getStaticUriWithMarkers(
+          [
+            locationMarker
+          ],
+          center: Maps.Location(latitude, longitude),
+          maptype: Maps.StaticMapViewType.roadmap);
+        columnWidgets.add(GestureDetector(
+          child: Image.network(mapUri.toString()),
+          onTap: () {
+            Maps.MapView _mapView = new Maps.MapView();
+            _mapView.onMapReady.listen((_) {
+              _mapView.setMarkers([
+                locationMarker
+              ]);
+            });
+            _mapView.show(
+              new Maps.MapOptions(
+                mapViewType: Maps.MapViewType.normal,
+                initialCameraPosition: new Maps.CameraPosition(
+                    new Maps.Location(latitude, longitude), 14.0),
+                title: "Check In Location"
+              ),
+              toolbarActions: [new Maps.ToolbarAction("Close", 1)],
+            );
+            _mapView.onToolbarAction.listen((int action) {
+              if (action == 1) {
+                _mapView.dismiss();
+              }
+            });
+          }
+        ));
+        columnWidgets.add(Container(padding: EdgeInsets.only(top: 3.0)));
+        columnWidgets.add(Row(
+          children: [Text(
+            'Tap map to interact with it',
+            style: TextStyle(fontStyle: FontStyle.italic)
+          )],
+          mainAxisAlignment: MainAxisAlignment.end,
+        ));
+      }
       columnWidgets.add(Container(padding: EdgeInsets.only(top: 16.0)));
       columnWidgets.add(Divider());
     }
@@ -52,7 +103,6 @@ class ActivityDetailsScreenState extends State<ActivityDetailsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    print(_message[0]);
     return Scaffold(
       appBar: AppBar(
         title: Text('Activity Details')

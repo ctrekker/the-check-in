@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:health_check/util/firebase_custom.dart';
 import 'package:health_check/util/spacer.dart' show SpacerBC;
+import 'package:map_view/map_view.dart';
 
 class SettingsScreen extends StatefulWidget {
   FirebaseUser _user;
@@ -65,7 +66,7 @@ class SettingsScreenState extends State<SettingsScreen> {
         body: SingleChildScrollView(
           child: Column(
             children: [
-              Text('Hi')
+              Text('hi')
             ]
           ),
           padding: EdgeInsets.all(32.0)

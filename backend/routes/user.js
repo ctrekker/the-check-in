@@ -496,7 +496,7 @@ function sendPushNotifications(uid, emails, info, callback) {
         if(info.location) {
             message.push({
                 title: 'Location',
-                image_url: getMapForLocation(location)
+                location: location
             });
         }
         console.log(message);
@@ -600,6 +600,7 @@ function getMapForLocation(location) {
         // ]
     };
     var url = global.gmaps.staticMap(params);
+    console.log(url);
 
     imageDownloader.image({
         url: url,
