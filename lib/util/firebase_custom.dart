@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/src/widgets/icon_data.dart';
+import 'package:health_check/util/config.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -9,7 +10,7 @@ import 'dart:convert';
 import 'dart:async';
 
 class FirebaseBackend {
-  static final String baseUrl = '192.168.1.20:3000';
+  static final String baseUrl = Config.backendUrl;
   static Future<BackendStatusResponse> userDetails(String token) async {
     http.Client client = new http.Client();
     http.Request request = http.Request('POST', new Uri.http(baseUrl, '/user/details'));
@@ -166,9 +167,8 @@ class FirebaseBackend {
     return out;
   }
   static Future<String> getDeviceId(String token, {bool force=false}) async {
-    final prefs = await SharedPreferences.getInstance();
-    if(prefs.getKeys().contains('device_id')&&!force) {
-      return prefs.getString('device_id');
+    if(Config.prefs.getKeys().contains('device_id')&&!force) {
+      return Config.prefs.getString('device_id');
     }
     else {
       http.Client client = new http.Client();
@@ -181,7 +181,7 @@ class FirebaseBackend {
 
       BackendStatusResponse res = BackendStatusResponse.fromJSON(json.decode(jsonStr));
       if(res.type != 'error') {
-        prefs.setString('device_id', res.raw['device_id']);
+        Config.prefs.setString('device_id', res.raw['device_id']);
         return res.raw['device_id'];
       }
       else {
