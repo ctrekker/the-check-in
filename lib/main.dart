@@ -19,6 +19,7 @@ import 'package:health_check/view/camera_view.dart';
 import 'package:health_check/util/firebase_custom.dart';
 import 'package:health_check/view/profile_screen.dart' show ProfileScreen;
 import 'package:map_view/map_view.dart' as Maps;
+import 'package:shared_preferences/shared_preferences.dart';
 
 final FirebaseAuth auth = FirebaseAuth.instance;
 FirebaseUser fuser;
@@ -27,6 +28,8 @@ FirebaseUser fuser;
 final Text appTitle = Text('The Check In');
 
 void main() {
+  Config.init();
+
   Maps.MapView.setApiKey(Config.mapsApiKey);
   runApp(new MyApp());
   cameraInit();
@@ -362,6 +365,7 @@ class _CheckInScreenState extends State<CheckInScreen> {
   bool _shareLocationValue = false;
 
   Location _location = Location();
+  String _locationCacheKey = 'locationChecked';
   bool _locationPermission = false;
   Map<String, double> _currentLocation;
   bool _showLocationPermissionPopup = false;
@@ -374,8 +378,18 @@ class _CheckInScreenState extends State<CheckInScreen> {
   }
   void initPlatformState() async {
     _updateLocationPermission();
+    if(!Config.prefs.getKeys().contains(_locationCacheKey)) {
+      Config.prefs.setBool(_locationCacheKey, false);
+    }
+    setState(() {
+      _shareLocationValue = Config.prefs.getBool(_locationCacheKey);
+    });
   }
 
+  void _setLocationCacheProperty() {
+    print(_shareLocationValue);
+    Config.prefs.setBool(_locationCacheKey, _shareLocationValue);
+  }
   void _updateLocationPermission({bool state=false}) async {
     try {
       _locationPermission = await _location.hasPermission();
@@ -487,6 +501,7 @@ class _CheckInScreenState extends State<CheckInScreen> {
                 setState(() {
                   _showLocationPermissionPopup = true;
                   _shareLocationValue = value;
+                  _setLocationCacheProperty();
                 });
               },
               value: _shareLocationValue
@@ -496,6 +511,7 @@ class _CheckInScreenState extends State<CheckInScreen> {
               setState(() {
                 _showLocationPermissionPopup = true;
                 _shareLocationValue = !_shareLocationValue;
+                _setLocationCacheProperty();
               });
             }
           ),

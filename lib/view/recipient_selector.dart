@@ -1,9 +1,13 @@
+import 'dart:convert';
+
 import 'package:firebase_auth/firebase_auth.dart' show FirebaseUser;
 import 'package:flutter/material.dart';
+import 'package:health_check/util/config.dart';
 import 'package:health_check/util/firebase_custom.dart';
 import 'dart:async';
 import 'package:health_check/view/add_recipient_dialog.dart' show AddRecipientDialog;
 import 'package:health_check/util/raised_icon_button.dart' show RaisedIconButton;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class RecipientSelector extends StatefulWidget {
   FirebaseUser _user;
@@ -24,6 +28,7 @@ class RecipientSelectorState extends State<RecipientSelector> {
   FirebaseUser _user;
 
   dynamic _checked = {};
+  String _checkedCacheKey = 'recipientsChecked';
   bool _offline = true;
   bool _checkRecipients = true;
   dynamic _recipients;
@@ -40,7 +45,7 @@ class RecipientSelectorState extends State<RecipientSelector> {
     List<int> out = [];
     _checked.forEach((id,checked) {
       if(checked) {
-        out.add(id);
+        out.add(int.parse(id));
       }
     });
     return out;
@@ -48,7 +53,8 @@ class RecipientSelectorState extends State<RecipientSelector> {
 
   void _onRecipientTap(on, id) {
     setState(() {
-      _checked[id] = !_checked[id];
+      _checked[id.toString()] = !_checked[id.toString()];
+      Config.prefs.setString(_checkedCacheKey, json.encode(_checked));
     });
   }
   void _onRecipientRemove(id) async {
@@ -64,7 +70,7 @@ class RecipientSelectorState extends State<RecipientSelector> {
     return ListTile(
       leading: Checkbox(
         onChanged: (on) {_onRecipientTap(on, id);},
-        value: _checked[id],
+        value: _checked[id.toString()],
       ),
       trailing: IconButton(
         icon: Icon(Icons.remove_circle_outline),
@@ -78,12 +84,23 @@ class RecipientSelectorState extends State<RecipientSelector> {
   }
 
   void _getRecipients() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    dynamic _checkedCache;
+    if(prefs.getKeys().contains(_checkedCacheKey)) {
+      _checkedCache = json.decode(prefs.getString(_checkedCacheKey));
+    }
+
     _recipients = await FirebaseBackend.getAllRecipients(await _user.getIdToken());
     if(_recipients != null && !(_recipients is List) && _recipients['type'] == 'error') _recipients = null;
     if(_recipients != null) {
       for (dynamic recipient in _recipients) {
-        if (_checked[recipient['id']] == null) {
-          _checked[recipient['id']] = false;
+        if (_checked[recipient['id'].toString()] == null) {
+          if(_checkedCache != null && _checkedCache.keys.contains(recipient['id'].toString())) {
+            _checked[recipient['id'].toString()] = _checkedCache[recipient['id'].toString()];
+          }
+          else {
+            _checked[recipient['id'].toString()] = false;
+          }
         }
       }
     }
