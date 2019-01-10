@@ -320,10 +320,15 @@ router.post('/activity/get', function(req, res) {
                     res.json(responses.get('GENERIC_DB_ERROR', {}, err, decodedToken.uid, req));
                     return;
                 }
-                res.json(responses.get('ACTIVITY_GET_SUCCESS', {activity: results}, null, decodedToken.uid, req));
+                res.json(responses.get('ACTIVITY_GET_SUCCESS', { activity: results }, null, decodedToken.uid, req));
             });
     }).catch(function(err) {
-        res.json(responses.get('AUTH_BAD_TOKEN', {}, err, null, req));
+        try {
+            res.json(responses.get('AUTH_BAD_TOKEN', {}, err, null, req));
+        }
+        catch(e) {
+            console.log('WARN: error within /activity/get auth catch block');
+        }
     });
 });
 
@@ -437,6 +442,7 @@ function getRecipients(token, callback) {
 }
 function sendEmails(uid, emails, info, callback) {
     admin.auth().getUser(uid).then(function (user) {
+        var location = info.location ? JSON.parse(info.location) : null;
         var subject = user.displayName + ' has checked in';
 
         var emailContent = '';
@@ -449,6 +455,8 @@ function sendEmails(uid, emails, info, callback) {
             message: info.message || undefined,
             image_id: info.image_id || undefined,
             location: info.location || undefined,
+            location_latitude: location.latitude,
+            location_longitude: location.longitude,
             date: dateFormat(new Date(), 'mmmm dS, yyyy'),
             time: dateFormat(new Date(), 'h:MM TT')
         }, function(err, html) {
