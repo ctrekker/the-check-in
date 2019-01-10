@@ -7,6 +7,7 @@ import 'dart:convert';
 
 import 'package:map_view/static_map_provider.dart';
 import 'package:map_view/map_view.dart' as Maps;
+import 'package:cached_network_image/cached_network_image.dart';
 
 class ActivityDetailsScreen extends StatefulWidget {
   String _message;
@@ -45,7 +46,13 @@ class ActivityDetailsScreenState extends State<ActivityDetailsScreen> {
         ));
       }
       if(elementData.containsKey('image_url')) {
-        columnWidgets.add(Image.network(elementData['image_url']));
+        columnWidgets.add(CachedNetworkImage(
+          imageUrl: elementData['image_url'],
+          placeholder: Center(
+            child: CircularProgressIndicator()
+          ),
+          errorWidget: Icon(Icons.error),
+        ));
       }
       if(elementData.containsKey('location')) {
         double latitude = elementData['location']['latitude'].toDouble();
@@ -59,7 +66,13 @@ class ActivityDetailsScreenState extends State<ActivityDetailsScreen> {
           center: Maps.Location(latitude, longitude),
           maptype: Maps.StaticMapViewType.roadmap);
         columnWidgets.add(GestureDetector(
-          child: Image.network(mapUri.toString()),
+          child: CachedNetworkImage(
+            imageUrl: mapUri.toString(),
+            placeholder: Center(
+              child: CircularProgressIndicator()
+            ),
+            errorWidget: Icon(Icons.error)
+          ),
           onTap: () {
             Maps.MapView _mapView = new Maps.MapView();
             _mapView.onMapReady.listen((_) {
