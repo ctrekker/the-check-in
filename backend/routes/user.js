@@ -7,6 +7,8 @@ var fs = require('fs');
 var path = require('path');
 var imageDownloader = require('image-downloader');
 var md5 = require('md5');
+var Twig = require('twig');
+var dateFormat = require('dateformat');
 
 var serviceAccount = require('../firebase-admin-key.json');
 admin.initializeApp({
@@ -355,6 +357,7 @@ router.post('/checkIn', function(req, res) {
                             res.json(responses.get('RECIPIENT_GET_ERROR', {}, err, decodedToken.uid, req));
                         }
                         else {
+                            info.location_image_url = info.location != null ? getMapForLocation(info.location) : null;
                             var recipientEmails = [];
                             for(var i=0; i<results.length; i++) {
                                 for(var j=0; j<recipients.length; j++) {
@@ -367,7 +370,7 @@ router.post('/checkIn', function(req, res) {
                             if(recipientEmails.length > 0) {
                                 sendEmails(decodedToken.uid, recipientEmails, info, function (err) {
                                     if (err) {
-                                        responses.get('GENERIC_EMAIL_ERROR', {}, err, decodedToken.uid, req);
+                                        //responses.get('GENERIC_EMAIL_ERROR', {}, err, decodedToken.uid, req);
                                     }
                                 });
                                 sendPushNotifications(decodedToken.uid, recipientEmails, info, function(err) {
@@ -440,18 +443,32 @@ function sendEmails(uid, emails, info, callback) {
         emailContent += '<p>' + (info.rating === -1 ? 'No rating was given' : 'Rating: ' + info.rating + ' of 5 stars') + '</p>';
         emailContent += '<p>' + (info.message === null ? 'No message was sent' : 'Message: ' + info.message) + '</p>';
         emailContent += '<p>' + (info.image_id === null ? 'No image was sent' : '<img src="' + global.domain + '/user/image/get/' + info.image_id + '"/>') + '</p>';
-        email.sendMail({
-            from: 'burnscoding@gmail.com',
-            bcc: emails.join(','),
-            subject: subject,
-            html: emailContent
-        }, function(err, info) {
+        Twig.renderFile('./views/email_template.twig', {
+            domain: global.domain,
+            display_name: user.displayName,
+            message: info.message || undefined,
+            image_id: info.image_id || undefined,
+            location: info.location || undefined,
+            date: dateFormat(new Date(), 'mmmm dS, yyyy'),
+            time: dateFormat(new Date(), 'h:MM TT')
+        }, function(err, html) {
             if(err) {
-                callback(err);
+                console.log(err);
+                return;
             }
-            else {
-                callback();
-            }
+            email.sendMail({
+                from: 'burnscoding@gmail.com',
+                bcc: emails.join(','),
+                subject: subject,
+                html: html
+            }, function(err, info) {
+                if(err) {
+                    callback(err);
+                }
+                else {
+                    callback();
+                }
+            });
         });
     });
 }
@@ -499,7 +516,6 @@ function sendPushNotifications(uid, emails, info, callback) {
                 location: location
             });
         }
-        console.log(message);
 
         if(message.length < 1) {
             message.push({
@@ -541,7 +557,7 @@ function sendPushNotifications(uid, emails, info, callback) {
                                 }).then(function(response) {
 
                                 }).catch(function(err) {
-                                    console.log(err);
+
                                 });
                             }
                         });
@@ -576,6 +592,7 @@ function generateId(length) {
     return text;
 }
 function getMapForLocation(location) {
+    location = JSON.parse(location);
     var center = location.latitude+','+location.longitude;
     var params = {
         center: center,
@@ -600,7 +617,6 @@ function getMapForLocation(location) {
         // ]
     };
     var url = global.gmaps.staticMap(params);
-    console.log(url);
 
     imageDownloader.image({
         url: url,
@@ -608,6 +624,15 @@ function getMapForLocation(location) {
     });
 
     return global.domain + '/user/maps/get/' + center;
+}
+
+function shallowClone(obj) {
+    var out = {};
+    var keys = Object.keys(obj);
+    for(var i = 0; i < keys.length; i++) {
+        out[keys[i]] = obj[keys[i]];
+    }
+    return out;
 }
 
 module.exports = router;

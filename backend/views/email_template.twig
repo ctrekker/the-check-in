@@ -1,0 +1,71 @@
+<div style="width:100%;background-color:#f3f3f3;margin:0;padding:0;font-family:'Proxima Nova Regular',Helvetica,Arial,sans-serif">
+    <table style="width:650px;margin-left:auto;margin-right:auto;background-color:white;border-collapse:collapse">
+        <tr style="background-color:#237be8;color:white;box-shadow: 0 3px 6px 0 #a7a7a7">
+            <td style="padding:15px" colspan="3"><table style="margin-left:auto;margin-right:auto">
+                <tr>
+                    <td align="center" colspan="2"><h1 style="margin:0">{{ display_name }} has checked in</h1></td>
+                </tr>
+                <tr><td colspan="2"><div style="margin:7px"></div><td></tr>
+                <tr>
+                    <td align="left">{{ date }}</td>
+                    <td align="right">{{ time }}</td>
+                </tr>
+            </table></td>
+        </tr>
+        <tr>
+            <td colspan="3" style="padding:20px;padding-bottom:15px">
+                <h3 style="margin:5px;margin-top:15px">Message</h3>
+                <p style="margin:5px">{{ message }}{% if message is not defined %}No message was sent{% endif %}</p>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2" style="padding-left:20px;padding-right:20px">
+                <h3 style="margin:5px;margin-top:15px">Image</h3>
+                {% if image_id is defined %}<a href="{{ domain }}/user/image/get/{{ image_id }}"><img style="margin:5px;width:100%;box-shadow: 0 3px 6px 0 #a7a7a7" src="{{ domain }}/user/image/get/V52U3gNQB19WLnUGKqrfkieTV1lrnwYi"/></a>{% endif %}
+                {% if image_id is not defined %}<p style="margin:5px">No image was sent</p>{% endif %}
+            </td>
+            <td rowspan="2" style="vertical-align:top">
+                <div style="background-color:#dedede;padding:10px;box-shadow: 0 3px 6px 0 #a7a7a7">
+                    <h4 style="margin:5px">Get the app!</h4>
+                    <img style="width:100%" src="{{ domain }}/google-play-badge.png"/>
+                    <div style="padding:13px;margin-top:-12px"><img style="width:100%" src="{{ domain }}/app-store-badge.png"/></div>
+                    <p style="margin:5px;margin-top:0;color:grey;font-size:12px">The Check In app provides an easy way to receive checkins like this one</p>
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2" style="width:66%;padding-left:20px;padding-right:20px">
+                <h3 style="margin:5px;margin-top:15px">Location</h3>
+                {% if location is defined %}<a href="{{ domain }}/user/maps/get/{{ location }}"><img style="margin:5px;width:100%;box-shadow: 0 3px 6px 0 #a7a7a7" src="{{ domain }}/user/maps/get/39,-103"/>{% endif %}
+                {% if location is not defined %}<p style="margin:5px">No location data was sent</p>{% endif %}
+            </td>
+        </tr>
+        <tr>
+            <td colspan="3">
+                <div style="padding:18px"></div>
+            </td>
+        </tr>
+        <tr style="background-color:#5a5a5a;color:#d0d0d0;box-shadow: 0 -3px 6px 0 lightgrey"><td colspan="3">
+            <table style="width:100%">
+                <tr>
+                    <td style="padding:20px">
+                        <div style="margin-bottom:5px">
+                            <a style="color:#d0d0d0">Get the app</a>
+                        </div>
+                        <div style="">
+                            <a style="color:#d0d0d0">About this message</a>
+                        </div>
+                    </td>
+                    <td colspan="2" style="padding:20px" align="right">
+                        <div style="margin-bottom:5px">
+                            <a style="color:#d0d0d0">Unsubscribe</a>
+                        </div>
+                        <div>
+                            <a style="color:#d0d0d0">Request removal of contact</a>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+        </td></tr>
+    </table>
+</div>
