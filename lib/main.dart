@@ -683,11 +683,21 @@ class _CheckInAttachmentsState extends State<CheckInAttachments> {
     }
     else {
       imgChildren.add(
-        new FutureBuilder(
-          future: _getLocalFile(_imagePath),
-          builder: (BuildContext context, AsyncSnapshot<File> snapshot) {
-            return snapshot.data != null ? new Image.file(snapshot.data) : new Container();
-          }),
+        Stack(
+          children: <Widget>[
+            Container(
+              padding: EdgeInsets.all(15.0),
+              child: Center(
+                child: CircularProgressIndicator(),
+              ),
+            ),
+            new FutureBuilder(
+              future: _getLocalFile(_imagePath),
+              builder: (BuildContext context, AsyncSnapshot<File> snapshot) {
+                return snapshot.data != null ? new Image.file(snapshot.data) :new Container() /*new Center(child: new CircularProgressIndicator())*/;
+            }),
+          ],
+        )
       );
       imgChildren.add(
         FlatButton(
