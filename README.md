@@ -1,6 +1,5 @@
-# health_check
-
-An application which serves as a daily check of mental health.
+# The Check In
+This application serves as a more simple and elegant solution to the check in problem. For example, if parents want to know if their child got to their destination safely, they could either plan to have their child check in beforehand, or request a check in otherwise.
 
 ## Getting Started
 

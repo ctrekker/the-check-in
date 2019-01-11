@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart' show FirebaseAuth, FirebaseUser, PlatformException;
 import 'dart:async';
-import 'package:health_check/main.dart' show auth, appTitle;
-import 'package:health_check/util/firebase_custom.dart';
+import 'package:the_check_in/main.dart' show auth, appTitle;
+import 'package:the_check_in/util/firebase_custom.dart';
 
 class UserScreen extends StatefulWidget {
   @override

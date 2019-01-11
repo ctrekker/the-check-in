@@ -1,5 +1,5 @@
-name: health_check
-description: An application which serves as a daily check of mental health.
+name: the_check_in
+description: An application which serves as a simple and elegant solution to the process of checking in.
 
 # The following defines the version and build number for your application.
 # A version number is three numbers separated by dots, like 1.2.43

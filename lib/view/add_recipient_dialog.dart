@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart' show FirebaseAuth, FirebaseUser, PlatformException;
-import 'package:health_check/util/firebase_custom.dart';
+import 'package:the_check_in/util/firebase_custom.dart';
 
 final FirebaseAuth _auth = FirebaseAuth.instance;
 

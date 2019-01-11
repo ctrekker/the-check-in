@@ -2,8 +2,8 @@ import 'dart:async';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:health_check/util/firebase_custom.dart';
-import 'package:health_check/view/activity_details_screen.dart';
+import 'package:the_check_in/util/firebase_custom.dart';
+import 'package:the_check_in/view/activity_details_screen.dart';
 
 class ActivityWidget extends StatefulWidget {
   FirebaseUser _user;

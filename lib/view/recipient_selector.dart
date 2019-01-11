@@ -2,11 +2,11 @@ import 'dart:convert';
 
 import 'package:firebase_auth/firebase_auth.dart' show FirebaseUser;
 import 'package:flutter/material.dart';
-import 'package:health_check/util/config.dart';
-import 'package:health_check/util/firebase_custom.dart';
+import 'package:the_check_in/util/config.dart';
+import 'package:the_check_in/util/firebase_custom.dart';
 import 'dart:async';
-import 'package:health_check/view/add_recipient_dialog.dart' show AddRecipientDialog;
-import 'package:health_check/util/raised_icon_button.dart' show RaisedIconButton;
+import 'package:the_check_in/view/add_recipient_dialog.dart' show AddRecipientDialog;
+import 'package:the_check_in/util/raised_icon_button.dart' show RaisedIconButton;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class RecipientSelector extends StatefulWidget {
