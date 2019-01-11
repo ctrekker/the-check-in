@@ -378,12 +378,12 @@ router.post('/checkIn', function(req, res) {
                                         //responses.get('GENERIC_EMAIL_ERROR', {}, err, decodedToken.uid, req);
                                     }
                                 });
-                                sendPushNotifications(decodedToken.uid, recipientEmails, info, function(err) {
-                                    if(err) {
-
-                                    }
-                                });
                             }
+                            sendPushNotifications(decodedToken.uid, recipientEmails, info, function(err) {
+                                if(err) {
+
+                                }
+                            });
                             res.json(responses.get('CHECKIN_SUCCESS', {}, null, decodedToken.uid, req));
                         }
                     });
@@ -483,25 +483,33 @@ function sendEmails(uid, emails, info, callback) {
 function sendPushNotifications(uid, emails, info, callback) {
     admin.auth().getUser(uid).then(function(user) {
         var title = user.displayName + ' has checked in';
-        var summary = [];
+        var titleSelf = 'You have checked in';
+        var summary = getSummary(user.displayName);
+        var summarySelf = getSummary('You');
         var message = [];
-        if(info.rating !== -1) {
-            summary.push(user.displayName + ' gave a rating of ' + info.rating);
-        }
-        if(info.message !== null && info.image_id === null) {
-            summary.push('A message was sent');
-        }
-        else if(info.message !== null && info.image_id !== null) {
-            summary.push('A message and an image were sent');
-        }
-        else if(info.message === null && info.image_id !== null) {
-            summary.push('An image was sent');
-        }
-        if(info.location !== null) {
-            summary.push('Location data was shared');
+        function getSummary(displayName) {
+            var out = [];
+            if(info.rating !== -1) {
+                out.push(displayName + ' gave a rating of ' + info.rating);
+            }
+            if(info.message !== null && info.image_id === null) {
+                out.push('A message was sent');
+            }
+            else if(info.message !== null && info.image_id !== null) {
+                out.push('A message and an image were sent');
+            }
+            else if(info.message === null && info.image_id !== null) {
+                out.push('An image was sent');
+            }
+            if(info.location !== null) {
+                out.push('Location data was shared');
+            }
+            return out;
         }
 
+
         summary = summary.join('. ');
+        summarySelf = summarySelf.join('. ');
 
         var location = JSON.parse(info.location);
 
@@ -530,6 +538,10 @@ function sendPushNotifications(uid, emails, info, callback) {
                 text: 'No details were provided'
             });
         }
+
+        addActivity(user.uid, titleSelf, summarySelf, message, 'CHECKIN_S', function(err) {
+            if(err) console.log(err);
+        });
 
         for(var email_id = 0; email_id < emails.length; email_id++) {
             var email = emails[email_id];

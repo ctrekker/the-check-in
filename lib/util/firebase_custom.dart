@@ -193,6 +193,8 @@ class FirebaseBackend {
     switch(type) {
       case 'CHECKIN_R':
         return Icons.access_time;
+      case 'CHECKIN_S':
+        return Icons.access_time;
       default:
         return Icons.message;
     }
