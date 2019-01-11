@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:health_check/util/config.dart';
+import 'package:the_check_in/util/config.dart';
 import 'package:html2md/html2md.dart' as html2md;
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:map_view/map_view_type.dart';
