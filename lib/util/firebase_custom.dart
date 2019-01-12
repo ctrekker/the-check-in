@@ -123,6 +123,14 @@ class FirebaseBackend {
     String jsonStr = await response.stream.bytesToString();
     return BackendStatusResponse.fromJSON(json.decode(jsonStr));
   }
+  static Future<dynamic> getSettingsScreen() async {
+    http.Client client = new http.Client();
+    http.Request request = new http.Request('POST', new Uri.http(baseUrl, '/settings/get'));
+
+    http.StreamedResponse response = await client.send(request);
+    String jsonStr = await response.stream.bytesToString();
+    return json.decode(jsonStr);
+  }
   static Future<BackendStatusResponse> setSettings(String token, dynamic value) async {
     http.Client client = new http.Client();
     http.Request request = new http.Request('POST', new Uri.http(baseUrl, '/user/attribute/settings/set'));

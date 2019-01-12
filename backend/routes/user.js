@@ -159,23 +159,9 @@ router.post('/attribute/:attributeId/get', function(req, res) {
         return;
     }
     admin.auth().verifyIdToken(req.body.token).then(function(decodedToken) {
-        var attributeId = req.params.attributeId.toUpperCase();
-        conn.execute(
-            'SELECT value FROM user_attributes WHERE uid = ? AND attribute = (SELECT id FROM attributes WHERE name = ?)',
-            [decodedToken.uid, attributeId],
-            function(err, results, fields) {
-                if(err) {
-                    res.json(responses.get('GENERIC_DB_ERROR', {}, err, decodedToken.uid, req));
-                }
-                else {
-                    if(results.length > 0) {
-                        res.json(responses.get('ATTRIBUTE_GET_SUCCESS', {value: results[0].value}, null, decodedToken.uid, req));
-                    }
-                    else {
-                        res.json(responses.get('ATTRIBUTE_GET_SUCCESS', {value: null}, null, decodedToken.uid, req));
-                    }
-                }
-            });
+        getAttribute(decodedToken.uid, req.params.attributeId, req, function(err, response) {
+            res.json(response);
+        });
     }).catch(function(err) {
         res.json(responses.get('AUTH_BAD_TOKEN', {}, err, null, req));
     });
@@ -195,11 +181,9 @@ router.post('/attribute/:attributeId/set', function(req, res) {
                     res.json(responses.get('GENERIC_DB_ERROR', {}, err, decodedToken.uid, req));
                 }
                 var sql = 'UPDATE user_attributes SET value = ? WHERE uid = ? AND attribute = (SELECT id FROM attributes WHERE name = ?)';
-                console.log(results[0].attr_num);
                 if(parseInt(results[0].attr_num) === 0) {
                     sql = 'INSERT INTO backend.user_attributes (value, uid, attribute) VALUES (?, ?, (SELECT id FROM attributes WHERE name = ?))';
                 }
-                console.log(sql);
                 conn.execute(
                     sql,
                     [req.body.value, decodedToken.uid, attributeId],
@@ -312,16 +296,22 @@ router.post('/activity/get', function(req, res) {
         return;
     }
     admin.auth().verifyIdToken(req.body.token).then(function(decodedToken) {
-        conn.execute(
-            'SELECT title, summary, message, type, send_timestamp as `timestamp` FROM activity WHERE uid=? ORDER BY send_timestamp DESC LIMIT 5',
-            [decodedToken.uid],
-            function(err, results, fields) {
-                if(err) {
-                    res.json(responses.get('GENERIC_DB_ERROR', {}, err, decodedToken.uid, req));
-                    return;
-                }
-                res.json(responses.get('ACTIVITY_GET_SUCCESS', { activity: results }, null, decodedToken.uid, req));
-            });
+        getSetting(decodedToken.uid, 'activities_visible', req, function(value) {
+            value = value || "10";
+            if(parseInt(value) > 100) {
+                value = "1";
+            }
+            conn.execute(
+                'SELECT title, summary, message, type, send_timestamp as `timestamp` FROM activity WHERE uid=? ORDER BY send_timestamp DESC LIMIT ?',
+                [decodedToken.uid, parseInt(value)],
+                function(err, results, fields) {
+                    if(err) {
+                        res.json(responses.get('GENERIC_DB_ERROR', {}, err, decodedToken.uid, req));
+                        return;
+                    }
+                    res.json(responses.get('ACTIVITY_GET_SUCCESS', { activity: results }, null, decodedToken.uid, req));
+                });
+        });
     }).catch(function(err) {
         try {
             res.json(responses.get('AUTH_BAD_TOKEN', {}, err, null, req));
@@ -364,27 +354,42 @@ router.post('/checkIn', function(req, res) {
                         else {
                             info.location_image_url = info.location != null ? getMapForLocation(info.location) : null;
                             var recipientEmails = [];
+                            var settingCallbacks = 0;
+                            var settingTarget = 0;
                             for(var i=0; i<results.length; i++) {
+                                var currentEmail = results[i].email;
                                 for(var j=0; j<recipients.length; j++) {
-                                    if(results[i].id === parseInt(recipients[j]) && results[i].email != null) {
-                                        recipientEmails.push(results[i].email);
+                                    if(results[i].id === parseInt(recipients[j]) && currentEmail != null) {
+                                        settingTarget++;
+                                        getSetting(decodedToken.uid, 'receive_emails', req, function(value, email) {
+                                            settingCallbacks++;
+                                            if(value !== false) {
+                                                recipientEmails.push(email);
+                                            }
+                                            if(settingCallbacks >= settingTarget) {
+                                                callback();
+                                            }
+                                        }, currentEmail);
+
                                         break;
                                     }
                                 }
                             }
-                            if(recipientEmails.length > 0) {
-                                sendEmails(decodedToken.uid, recipientEmails, info, function (err) {
+                            function callback() {
+                                if (recipientEmails.length > 0) {
+                                    sendEmails(decodedToken.uid, recipientEmails, info, function (err) {
+                                        if (err) {
+                                            //responses.get('GENERIC_EMAIL_ERROR', {}, err, decodedToken.uid, req);
+                                        }
+                                    });
+                                }
+                                sendPushNotifications(decodedToken.uid, recipientEmails, info, function (err) {
                                     if (err) {
-                                        //responses.get('GENERIC_EMAIL_ERROR', {}, err, decodedToken.uid, req);
+
                                     }
                                 });
+                                res.json(responses.get('CHECKIN_SUCCESS', {}, null, decodedToken.uid, req));
                             }
-                            sendPushNotifications(decodedToken.uid, recipientEmails, info, function(err) {
-                                if(err) {
-
-                                }
-                            });
-                            res.json(responses.get('CHECKIN_SUCCESS', {}, null, decodedToken.uid, req));
                         }
                     });
                 }
@@ -439,6 +444,34 @@ function getRecipients(token, callback) {
     }).catch(function(err) {
         callback('AUTH_BAD_TOKEN', err);
     });
+}
+function getSetting(uid, name, req, callback, mutables) {
+    getAttribute(uid, 'settings', req, function(err, res) {
+        if(err || !res['value']) {
+            callback(null, mutables);
+        }
+        else {
+            callback(JSON.parse(res['value'])[name], mutables);
+        }
+    });
+}
+function getAttribute(uid, attributeId, req, callback) {
+    conn.execute(
+        'SELECT value FROM user_attributes WHERE uid = ? AND attribute = (SELECT id FROM attributes WHERE name = ?)',
+        [uid, attributeId.toUpperCase()],
+        function(err, results, fields) {
+            if(err) {
+                callback(true, responses.get('GENERIC_DB_ERROR', {}, err, uid, req));
+            }
+            else {
+                if(results.length > 0) {
+                    callback(false, responses.get('ATTRIBUTE_GET_SUCCESS', {value: results[0].value}, null, uid, req));
+                }
+                else {
+                    callback(false, responses.get('ATTRIBUTE_GET_SUCCESS', {value: null}, null, uid, req));
+                }
+            }
+        });
 }
 function sendEmails(uid, emails, info, callback) {
     admin.auth().getUser(uid).then(function (user) {

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -20,6 +21,8 @@ class SettingsScreenState extends State<SettingsScreen> {
   };
   FirebaseUser _user;
   bool _loading = true;
+  dynamic settingsJson;
+  Map<String, dynamic> settingValues = Map();
 
   SettingsScreenState(FirebaseUser user) {
     _user = user;
@@ -28,7 +31,12 @@ class SettingsScreenState extends State<SettingsScreen> {
   void _loadSettings() async {
     String token = await _user.getIdToken();
     BackendStatusResponse res = await FirebaseBackend.getSettings(token);
-    print(res.raw);
+    settingsJson = await FirebaseBackend.getSettingsScreen();
+    print(settingsJson);
+
+    dynamic settingsAttribute = json.decode(res.raw['value']);
+    settingsAttribute.forEach((k, v) => settingValues[k] = v);
+
     if(res.raw['value'] == null) {
       await FirebaseBackend.setSettings(token, DEFAULT_SETTINGS);
       _loadSettings();
@@ -38,6 +46,81 @@ class SettingsScreenState extends State<SettingsScreen> {
         _loading = false;
       });
     }
+  }
+
+  dynamic _getSetting(String name, dynamic def) {
+    if(settingValues.containsKey(name)) {
+      return settingValues[name];
+    }
+    settingValues[name] = def;
+    return def;
+  }
+  void _updateSetting(String name, { dynamic value }) {
+    _user.getIdToken().then((token) {
+      FirebaseBackend.setSettings(token, settingValues);
+    });
+
+    setState(() {
+      settingValues[name] = value == null ? !settingValues[name] : value;
+    });
+  }
+
+  Widget _buildSettingsScreen(dynamic screenData) {
+    List<Widget> elements = [];
+    String type = screenData['type'];
+    if(screenData.containsKey('children')) {
+      for (int i = 0; i < screenData['children'].length; i++) {
+        elements.add(_buildSettingsScreen(screenData['children'][i]));
+      }
+    }
+    if(type=='container') {
+      return Container(
+        child: Column(
+          children: elements
+        )
+      );
+    }
+    if(type=='section') {
+      elements.insert(0, Text(screenData['name']));
+      elements.add(Divider());
+      return Container(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: elements
+        )
+      );
+    }
+    if(type=='checkbox') {
+      return ListTile(
+        leading: Checkbox(
+          value: _getSetting(screenData['name'], screenData['default']),
+          onChanged: (bool value) { _updateSetting(screenData['name']); },
+        ),
+        title: Text(screenData['label']),
+        onTap: () { _updateSetting(screenData['name']); }
+      );
+    }
+    if(type=='select') {
+      List<DropdownMenuItem<String>> items = [];
+      for(int i=0; i<screenData['values'].length; i++) {
+        String item = screenData['values'][i];
+        items.add(DropdownMenuItem<String>(
+            child: Text(item),
+            value: item
+        ));
+      }
+      return ListTile(
+        leading: DropdownButton<String>(
+          items: items,
+          value: _getSetting(screenData['name'], screenData['default']),
+          onChanged: (String value) {
+            _updateSetting(screenData['name'], value: value);
+          },
+        ),
+        title: Text(screenData['label'])
+      );
+    }
+    return Container();
   }
 
   @override
@@ -64,11 +147,7 @@ class SettingsScreenState extends State<SettingsScreen> {
       return Scaffold(
         appBar: appBar,
         body: SingleChildScrollView(
-          child: Column(
-            children: [
-              Text('hi')
-            ]
-          ),
+          child: _buildSettingsScreen(settingsJson),
           padding: EdgeInsets.all(32.0)
         )
       );

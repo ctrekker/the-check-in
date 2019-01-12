@@ -1,0 +1,30 @@
+{
+  "type": "container",
+  "children": [
+    {
+      "type": "section",
+      "name": "General",
+      "children": [
+        {
+          "type": "checkbox",
+          "name": "receive_emails",
+          "label": "Receive emails from us",
+          "default": true
+        }
+      ]
+    },
+    {
+      "type": "section",
+      "name": "Activity Feed",
+      "children": [
+        {
+          "type": "select",
+          "name": "activities_visible",
+          "label": "Activities shown",
+          "values": [ "5", "10", "25", "50" ],
+          "default": "25"
+        }
+      ]
+    }
+  ]
+}
