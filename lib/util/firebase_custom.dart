@@ -141,6 +141,16 @@ class FirebaseBackend {
     String jsonStr = await response.stream.bytesToString();
     return BackendStatusResponse.fromJSON(json.decode(jsonStr));
   }
+  static Future<BackendStatusResponse> setTimezone(String token, String timeZoneName) async {
+    http.Client client = new http.Client();
+    http.Request request = new http.Request('POST', new Uri.http(baseUrl, '/user/attribute/timezone/set'));
+
+    request.bodyFields = {'token': token, 'value': timeZoneName};
+
+    http.StreamedResponse response = await client.send(request);
+    String jsonStr = await response.stream.bytesToString();
+    return BackendStatusResponse.fromJSON(json.decode(jsonStr));
+  }
   static Future<BackendStatusResponse> uploadImage(String token, String imagePath) async {
     http.Client client = new http.Client();
     http.Request request = new http.Request('POST', new Uri.http(baseUrl, '/user/image/upload'));

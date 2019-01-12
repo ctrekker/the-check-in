@@ -19,7 +19,6 @@ import 'package:the_check_in/view/camera_view.dart';
 import 'package:the_check_in/util/firebase_custom.dart';
 import 'package:the_check_in/view/profile_screen.dart' show ProfileScreen;
 import 'package:map_view/map_view.dart' as Maps;
-import 'package:shared_preferences/shared_preferences.dart';
 
 final FirebaseAuth auth = FirebaseAuth.instance;
 FirebaseUser fuser;
@@ -92,7 +91,6 @@ class _MyAppState extends State<MyApp> {
   }
   @override
   Widget build(BuildContext context) {
-    print(DateTime.now().timeZoneOffset);
     Widget checkInButton = RaisedButton(
       child: Text('Check In'),
       color: Colors.blue,
@@ -105,7 +103,7 @@ class _MyAppState extends State<MyApp> {
       }
     );
     return MaterialApp(
-      title: 'Health Check',
+      title: 'The Check In',
       theme: new ThemeData(
         primarySwatch: Colors.blue,
         dividerColor: Colors.grey
@@ -152,7 +150,10 @@ class _LandingScreenState extends State<LandingScreen> {
       fuser = await auth.currentUser();
 
       if (fuser != null) {
-        print(await fuser.getIdToken());
+        String token = await fuser.getIdToken();
+        print(token);
+        FirebaseBackend.setTimezone(token, DateTime.now().timeZoneName);
+
         FirebaseMessaging _firebaseMessaging = new FirebaseMessaging();
         _firebaseMessaging.configure(
           onMessage: (Map<String, dynamic> message) {

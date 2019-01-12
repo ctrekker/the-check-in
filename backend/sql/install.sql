@@ -91,3 +91,4 @@ DELETE FROM attributes;
 INSERT INTO attributes (name) VALUE ('AGE');
 INSERT INTO attributes (name) VALUE ('GENDER');
 INSERT INTO attributes (name) VALUE ('SETTINGS');
+INSERT INTO attributes (name) VALUE ('TIMEZONE');
