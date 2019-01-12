@@ -21,20 +21,8 @@
           "type": "select",
           "name": "activities_visible",
           "label": "Activities shown",
-          "values": [ "5", "10", "20" ],
-          "default": "10"
-        },
-        {
-          "type": "checkbox",
-          "name": "show_self_checkin",
-          "label": "Show your check ins in your activity feed",
-          "default": true
-        },
-        {
-          "type": "checkbox",
-          "name": "show_other_checkin",
-          "label": "Show other's check ins in your activity feed",
-          "default": true
+          "values": [ "5", "10", "25", "50" ],
+          "default": "25"
         }
       ]
     }
