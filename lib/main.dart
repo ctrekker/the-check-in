@@ -92,6 +92,7 @@ class _MyAppState extends State<MyApp> {
   }
   @override
   Widget build(BuildContext context) {
+    print(DateTime.now().timeZoneOffset);
     Widget checkInButton = RaisedButton(
       child: Text('Check In'),
       color: Colors.blue,

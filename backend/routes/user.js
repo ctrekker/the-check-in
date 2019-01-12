@@ -195,11 +195,9 @@ router.post('/attribute/:attributeId/set', function(req, res) {
                     res.json(responses.get('GENERIC_DB_ERROR', {}, err, decodedToken.uid, req));
                 }
                 var sql = 'UPDATE user_attributes SET value = ? WHERE uid = ? AND attribute = (SELECT id FROM attributes WHERE name = ?)';
-                console.log(results[0].attr_num);
                 if(parseInt(results[0].attr_num) === 0) {
                     sql = 'INSERT INTO backend.user_attributes (value, uid, attribute) VALUES (?, ?, (SELECT id FROM attributes WHERE name = ?))';
                 }
-                console.log(sql);
                 conn.execute(
                     sql,
                     [req.body.value, decodedToken.uid, attributeId],
