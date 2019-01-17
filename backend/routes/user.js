@@ -9,6 +9,7 @@ var imageDownloader = require('image-downloader');
 var md5 = require('md5');
 var Twig = require('twig');
 var dateFormat = require('dateformat');
+var moment = require('moment-timezone');
 
 var serviceAccount = require('../firebase-admin-key.json');
 admin.initializeApp({
@@ -377,7 +378,7 @@ router.post('/checkIn', function(req, res) {
                             }
                             function callback() {
                                 if (recipientEmails.length > 0) {
-                                    sendEmails(decodedToken.uid, recipientEmails, info, function (err) {
+                                    sendEmails(decodedToken.uid, recipientEmails, info, req, function (err) {
                                         if (err) {
                                             //responses.get('GENERIC_EMAIL_ERROR', {}, err, decodedToken.uid, req);
                                         }
@@ -473,7 +474,7 @@ function getAttribute(uid, attributeId, req, callback) {
             }
         });
 }
-function sendEmails(uid, emails, info, callback) {
+function sendEmails(uid, emails, info, req, callback) {
     admin.auth().getUser(uid).then(function (user) {
         var location = info.location ? JSON.parse(info.location) : null;
         var subject = user.displayName + ' has checked in';
@@ -482,34 +483,44 @@ function sendEmails(uid, emails, info, callback) {
         emailContent += '<p>' + (info.rating === -1 ? 'No rating was given' : 'Rating: ' + info.rating + ' of 5 stars') + '</p>';
         emailContent += '<p>' + (info.message === null ? 'No message was sent' : 'Message: ' + info.message) + '</p>';
         emailContent += '<p>' + (info.image_id === null ? 'No image was sent' : '<img src="' + global.domain + '/user/image/get/' + info.image_id + '"/>') + '</p>';
-        Twig.renderFile('./views/email_template.twig', {
-            domain: global.domain,
-            display_name: user.displayName,
-            message: info.message || undefined,
-            image_id: info.image_id || undefined,
-            location: info.location || undefined,
-            location_latitude: location.latitude,
-            location_longitude: location.longitude,
-            date: dateFormat(new Date(), 'mmmm dS, yyyy'),
-            time: dateFormat(new Date(), 'h:MM TT')
-        }, function(err, html) {
+        getAttribute(uid, 'timezone', req, function(err, res) {
             if(err) {
-                console.log(err);
-                return;
+                console.log('error: '+res);
             }
-            email.sendMail({
-                from: 'burnscoding@gmail.com',
-                bcc: emails.join(','),
-                subject: subject,
-                html: html
-            }, function(err, info) {
-                if(err) {
-                    callback(err);
-                }
-                else {
-                    callback();
-                }
-            });
+            else {
+                var timezone = res.value || 'UTC';
+
+                Twig.renderFile('./views/email_template.twig', {
+                    domain: global.domain,
+                    display_name: user.displayName,
+                    message: info.message || undefined,
+                    image_id: info.image_id || undefined,
+                    location: info.location || undefined,
+                    location_latitude: location.latitude,
+                    location_longitude: location.longitude,
+                    // date: dateFormat(new Date(), 'mmmm dS, yyyy'),
+                    // time: dateFormat(new Date(), 'h:MM TT')
+                    date_time: moment().tz(timezone).format('MMMM Do YYYY, h:mm a [(' + timezone + ')]')
+                }, function(err, html) {
+                    if(err) {
+                        console.log(err);
+                        return;
+                    }
+                    email.sendMail({
+                        from: 'burnscoding@gmail.com',
+                        bcc: emails.join(','),
+                        subject: subject,
+                        html: html
+                    }, function(err, info) {
+                        if(err) {
+                            callback(err);
+                        }
+                        else {
+                            callback();
+                        }
+                    });
+                });
+            }
         });
     });
 }
