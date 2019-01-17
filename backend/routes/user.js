@@ -302,16 +302,22 @@ router.post('/activity/get', function(req, res) {
             if(parseInt(value) > 100) {
                 value = "1";
             }
-            conn.execute(
-                'SELECT title, summary, message, type, send_timestamp as `timestamp` FROM activity WHERE uid=? ORDER BY send_timestamp DESC LIMIT ?',
-                [decodedToken.uid, parseInt(value)],
-                function(err, results, fields) {
-                    if(err) {
-                        res.json(responses.get('GENERIC_DB_ERROR', {}, err, decodedToken.uid, req));
-                        return;
-                    }
-                    res.json(responses.get('ACTIVITY_GET_SUCCESS', { activity: results }, null, decodedToken.uid, req));
-                });
+            getAttribute(decodedToken.uid, 'timezone', req, function(err, response) {
+                var timezone = response.value || 'UTC';
+                conn.execute(
+                    'SELECT title, summary, message, type, send_timestamp as `timestamp` FROM activity WHERE uid=? ORDER BY send_timestamp DESC LIMIT ?',
+                    [decodedToken.uid, parseInt(value)],
+                    function(err, results, fields) {
+                        if(err) {
+                            res.json(responses.get('GENERIC_DB_ERROR', {}, err, decodedToken.uid, req));
+                            return;
+                        }
+                        for(var i=0; i<results.length; i++) {
+                            results[i]['date'] = moment(results[i]['timestamp']).tz(timezone).format('MMMM Do YYYY, h:mm a [(' + timezone + ')]');
+                        }
+                        res.json(responses.get('ACTIVITY_GET_SUCCESS', { activity: results }, null, decodedToken.uid, req));
+                    });
+            });
         });
     }).catch(function(err) {
         try {

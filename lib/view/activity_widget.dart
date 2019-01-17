@@ -67,7 +67,9 @@ class ActivityWidgetState extends State<ActivityWidget> {
       for (int i = 0; i < _activities.length; i++) {
         cardList.add(_buildActivityCard(
             FirebaseBackend.typeToIcon(_activities[i]['type']),
-            _activities[i]['title'], _activities[i]['summary'],
+            _activities[i]['title'],
+            _activities[i]['summary'],
+            _activities[i]['date'],
             _activities[i]['message']));
       }
       if (cardList.length == 0) {
@@ -85,18 +87,24 @@ class ActivityWidgetState extends State<ActivityWidget> {
       children: cardList,
     );
   }
-  Widget _buildActivityCard(IconData icon, String title, String summary, dynamic message) {
+  Widget _buildActivityCard(IconData icon, String title, String summary, String date, dynamic message) {
     return Card(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
           Container(
-            padding: EdgeInsets.only(top: 16.0)
+            padding: EdgeInsets.only(top: 16.0),
           ),
           ListTile(
             leading: Icon(icon),
             title: Text(title),
-            subtitle: Text(summary),
+            subtitle: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(summary),
+                Text(date)
+              ]
+            ),
           ),
           ButtonTheme.bar( // make buttons use the appropriate styles for cards
             child: ButtonBar(
