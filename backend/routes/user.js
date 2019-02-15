@@ -350,7 +350,6 @@ router.post('/checkIn', function(req, res) {
             'INSERT INTO check_in (uid, rating, message, image_id, location, recipients) VALUES (?, ?, ?, ?, ?, ?)',
             [decodedToken.uid, info.rating, info.message, info.image_id, info.location, recipients.join(',')],
             function(err, results, fields) {
-                console.log(results);
                 if(err) {
                     res.json(responses.get('GENERIC_DB_ERROR', {}, err, decodedToken.uid, req));
                 }
@@ -644,36 +643,44 @@ function sendEmails(uid, emails, info, req, callback) {
             else {
                 var timezone = res.value || 'UTC';
 
-                Twig.renderFile('./views/email_template.twig', {
-                    domain: global.domain,
-                    display_name: user.displayName,
-                    message: info.message || undefined,
-                    image_id: info.image_id || undefined,
-                    location: info.location || undefined,
-                    location_latitude: location.latitude,
-                    location_longitude: location.longitude,
-                    // date: dateFormat(new Date(), 'mmmm dS, yyyy'),
-                    // time: dateFormat(new Date(), 'h:MM TT')
-                    date_time: moment().tz(timezone).format('MMMM Do YYYY, h:mm a [(' + timezone + ')]')
-                }, function(err, html) {
-                    if(err) {
-                        console.log(err);
-                        return;
-                    }
-                    email.sendMail({
-                        from: 'burnscoding@gmail.com',
-                        bcc: emails.join(','),
-                        subject: subject,
-                        html: html
-                    }, function(err, info) {
+                for(var i=0; i<emails.length; i++) {
+                    var emailStr = emails[i];
+                    sendEmail(emailStr);
+                }
+
+                function sendEmail(emailStr) {
+                    Twig.renderFile('./views/email_template.twig', {
+                        domain: global.domain,
+                        display_name: user.displayName,
+                        message: info.message || undefined,
+                        image_id: info.image_id || undefined,
+                        location: info.location || undefined,
+                        location_latitude: location.latitude,
+                        location_longitude: location.longitude,
+                        // date: dateFormat(new Date(), 'mmmm dS, yyyy'),
+                        // time: dateFormat(new Date(), 'h:MM TT')
+                        date_time: moment().tz(timezone).format('MMMM Do YYYY, h:mm a [(' + timezone + ')]'),
+                        email_encoded: new Buffer(emailStr).toString('base64')
+                    }, function(err, html) {
                         if(err) {
-                            callback(err);
+                            console.log(err);
+                            return;
                         }
-                        else {
-                            callback();
-                        }
+                        email.sendMail({
+                            from: 'burnscoding@gmail.com',
+                            bcc: emailStr,
+                            subject: subject,
+                            html: html
+                        }, function(err, info) {
+                            if(err) {
+                                callback(err);
+                            }
+                            else {
+                                callback();
+                            }
+                        });
                     });
-                });
+                }
             }
         });
     });

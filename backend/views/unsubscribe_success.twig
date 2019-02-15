@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>About Check-In Emails</title>
+    <link rel="stylesheet" type="text/css" href="/stylesheets/email_action.css"/>
+    <script type="text/javascript" src="/javascripts/ajax.js"></script>
+    <script>
+        window.onload=function() {
+            var radios = document.querySelectorAll('input[name=feedback]');
+            var otherText = document.getElementById('otherExplanation');
+            var otherDone = document.getElementById('otherDone');
+            var feedbackWrapper = document.getElementById('feedbackWrapper');
+            var feedbackThanks = document.getElementById('feedbackThanks');
+
+            if(localStorage.getItem('givenFeedback') === 'true') {
+                feedbackWrapper.setAttribute('style', 'display: none');
+                feedbackThanks.setAttribute('style', '');
+            }
+
+            for(var i=0; i<radios.length; i++) {
+                radios[i].addEventListener('change', function(e) {
+                    if(this.value !== 'other') {
+                        sendFeedback(this.value);
+                        otherDone.setAttribute('style', 'display: none');
+                    }
+                    else {
+                        otherText.focus();
+                    }
+                });
+            }
+
+            otherText.onfocus = function() {
+                radios[radios.length-1].checked = true;
+                otherDone.setAttribute('style', '');
+            };
+            otherDone.onclick = function() {
+                sendFeedback(otherText.value);
+            };
+
+            function sendFeedback(value) {
+                ajax.post('/unsubscribe-feedback', {reason: value}, function() {
+                    feedbackWrapper.setAttribute('style', 'display: none');
+                    feedbackThanks.setAttribute('style', '');
+                    localStorage.setItem('givenFeedback', 'true');
+                });
+            }
+        }
+    </script>
+    <style>
+        form {
+            margin-left: auto;
+            margin-right: auto;
+        }
+        input[name='unsubscribe_button'] {
+            background-color: #5a7eff;
+            border: 1px solid black;
+            color: white;
+            border-radius: 20px;
+            padding: 10px;
+            margin-left: 20px;
+        }
+    </style>
+</head>
+<body>
+<div class="content-container">
+    <div class="content-wrapper">
+        <h2>You have now been unsubscribed</h2>
+        <p>We're sorry to see you go! We would appreciate it greatly if you let us know why:</p>
+        <div id="feedbackWrapper">
+            <input type="radio" id="spamButton" name="feedback" value="spam"/>
+            <label for="spamButton">Spam</label>
+            <br>
+            <input type="radio" id="irrelevantButton" name="feedback" value="irrelevant"/>
+            <label for="irrelevantButton">Irrelevant</label>
+            <br>
+            <input type="radio" id="tooFrequentButton" name="feedback" value="too_frequent"/>
+            <label for="tooFrequentButton">Too Frequent</label>
+            <br>
+            <input type="radio" id="otherButton" name="feedback" value="other"/>
+            <label for="otherButton">Other: <input type="text" id="otherExplanation" placeholder="Brief explanation"/><input type="button" id="otherDone" value="Done" style="display:none"/></label>
+            <br>
+        </div>
+        <div id="feedbackThanks" style="display: none">
+            <p>Thank you for your feedback!</p>
+        </div>
+    </div>
+</div>
+</body>
+</html>

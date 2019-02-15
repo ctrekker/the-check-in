@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>About Check-In Emails</title>
+    <link rel="stylesheet" type="text/css" href="/stylesheets/email_action.css"/>
+    <script>
+        window.onload=function() {
+            var unsubscribeLink = document.getElementById('unsubscribeLink');
+            unsubscribeLink.addEventListener('click', function(e) {
+                window.location = '/unsubscribe' + window.location.search;
+            });
+        }
+    </script>
+</head>
+<body>
+    <div class="content-container">
+        <div class="content-wrapper">
+            <h2>About Check-In Emails</h2>
+            <p>This email was sent to you because a user added your email as a recipient within The Check In app. If
+                you believe this to be a mistake, you may <a href="javascript:void(0)" id="unsubscribeLink">unsubscribe</a> from these emails.</p>
+        </div>
+    </div>
+</body>
+</html>
