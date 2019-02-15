@@ -313,7 +313,7 @@ router.post('/activity/get', function(req, res) {
                             return;
                         }
                         for(var i=0; i<results.length; i++) {
-                            results[i]['date'] = moment(results[i]['timestamp']).tz(timezone).format('MMMM Do YYYY, h:mm a [(' + timezone + ')]');
+                            results[i]['date'] = standardDateFormat(results[i]['timestamp'], timezone);
                         }
                         res.json(responses.get('ACTIVITY_GET_SUCCESS', { activity: results }, null, decodedToken.uid, req));
                     });
@@ -350,6 +350,7 @@ router.post('/checkIn', function(req, res) {
             'INSERT INTO check_in (uid, rating, message, image_id, location, recipients) VALUES (?, ?, ?, ?, ?, ?)',
             [decodedToken.uid, info.rating, info.message, info.image_id, info.location, recipients.join(',')],
             function(err, results, fields) {
+                console.log(results);
                 if(err) {
                     res.json(responses.get('GENERIC_DB_ERROR', {}, err, decodedToken.uid, req));
                 }
@@ -361,12 +362,14 @@ router.post('/checkIn', function(req, res) {
                         else {
                             info.location_image_url = info.location != null ? getMapForLocation(info.location) : null;
                             var recipientEmails = [];
+                            var allEmails = [];
                             var settingCallbacks = 0;
                             var settingTarget = 0;
                             for(var i=0; i<results.length; i++) {
                                 var currentEmail = results[i].email;
                                 for(var j=0; j<recipients.length; j++) {
                                     if(results[i].id === parseInt(recipients[j]) && currentEmail != null) {
+                                        allEmails.push(currentEmail);
                                         settingTarget++;
                                         getSetting(decodedToken.uid, 'receive_emails', req, function(value, email) {
                                             settingCallbacks++;
@@ -382,6 +385,22 @@ router.post('/checkIn', function(req, res) {
                                     }
                                 }
                             }
+
+                            conn.execute(
+                                'SELECT LAST_INSERT_ID() AS checkinId',
+                                [],
+                                function(err, results, fields) {
+                                    var checkinId = -1;
+                                    if(!err) {
+                                        checkinId = results[0]['checkinId'];
+                                    }
+                                    sendPushNotifications(decodedToken.uid, allEmails, info, checkinId, function (err) {
+                                        if (err) {
+
+                                        }
+                                    });
+                                });
+
                             function callback() {
                                 if (recipientEmails.length > 0) {
                                     sendEmails(decodedToken.uid, recipientEmails, info, req, function (err) {
@@ -390,17 +409,146 @@ router.post('/checkIn', function(req, res) {
                                         }
                                     });
                                 }
-                                sendPushNotifications(decodedToken.uid, recipientEmails, info, function (err) {
-                                    if (err) {
-
-                                    }
-                                });
                                 res.json(responses.get('CHECKIN_SUCCESS', {}, null, decodedToken.uid, req));
                             }
                         }
                     });
                 }
             });
+    }).catch(function(err) {
+        res.json(responses.get('AUTH_BAD_TOKEN', {}, err, null, req));
+    });
+});
+router.post('/checkIn/get', function(req, res) {
+    if(!req.body.token||!req.body.quantity||!req.body.page||!req.body.query) {
+        res.json(responses.get('AUTH_MISSING_ARGS', {}, null, null, req));
+        return;
+    }
+    admin.auth().verifyIdToken(req.body.token).then(function(decodedToken) {
+        var quantity, page;
+        if(!isNaN(req.body.quantity) && !isNaN(req.body.page)) {
+            quantity = parseInt(req.body.quantity);
+            page = parseInt(req.body.page);
+        } else {
+            res.json(responses.get('MALFORMED_ARGUMENT', {}, null, decodedToken.uid, req));
+            return;
+        }
+
+        if(quantity > 100) {
+            res.json(responses.get('MALFORMED_ARGUMENT', {}, null, decodedToken.uid, req));
+            return;
+        }
+
+        var query = req.body.query;
+        switch(query) {
+            case 'your_checkins':
+                conn.execute(
+                    'SELECT checkin_time, rating, message, image_id, location, recipients FROM check_in WHERE uid=? ORDER BY checkin_time DESC LIMIT ?, ?',
+                    [decodedToken.uid, page*quantity, quantity],
+                    function(err, results, fields) {
+                        if(err) {
+                            res.json(responses.get('GENERIC_DB_ERROR', {}, err, decodedToken.uid, req));
+                            return;
+                        }
+                        getAttribute(decodedToken.uid, 'timezone', req, function(err, response) {
+                            var timezone = response.value || 'UTC';
+                            for(var i=0; i<results.length; i++) {
+                                results[i]['checkin_time_parsed'] = standardDateFormat(results[i]['checkin_time'], timezone);
+                                results[i]['message'] = constructJsonMessage(results[i]);
+                            }
+
+                            res.json(results);
+                        });
+                    });
+                break;
+            case 'others_checkins':
+                conn.execute(
+                    'SELECT uid, checkin_time, rating, message, image_id, location, recipients FROM check_in WHERE id IN (SELECT checkin_id FROM check_in_others WHERE recipient_uid=?) ORDER BY checkin_time DESC LIMIT ?, ?',
+                    [decodedToken.uid, page*quantity, quantity],
+                    function(err, results, fields) {
+                        if(err) {
+                            res.json(responses.get('GENERIC_DB_ERROR', {}, err, decodedToken.uid, req));
+                            return;
+                        }
+                        getAttribute(decodedToken.uid, 'timezone', req, function(err, response) {
+                            var timezone = response.value || 'UTC';
+                            var completedCount = 0;
+
+                            function loadName(uid, index, callback) {
+                                admin.auth().getUser(uid).then(function(user) {
+                                    callback(user.displayName, index);
+                                    completedCount++;
+
+                                    if(completedCount >= results.length) {
+                                        complete();
+                                    }
+                                }).catch(function(err) {
+                                    callback(null, index);
+                                });
+                            }
+
+                            function complete() {
+                                console.log('Complete');
+                                res.json(results);
+                            }
+
+                            for(var i=0; i<results.length; i++) {
+                                results[i]['checkin_time_parsed'] = standardDateFormat(results[i]['checkin_time'], timezone);
+                                results[i]['message'] = constructJsonMessage(results[i]);
+                                loadName(results[i]['uid'], i, function(name, index) {
+                                    results[index]['name'] = name;
+                                    results[index]['uid'] = undefined;
+                                });
+                            }
+                        });
+                    });
+                break;
+            case 'your_checkin_requests':
+                res.json([]);
+                break;
+            case 'others_checkin_requests':
+                res.json([]);
+                break;
+        }
+
+    }).catch(function(err) {
+        res.json(responses.get('AUTH_BAD_TOKEN', {}, err, null, req));
+    });
+});
+router.post('/checkIn/get/resultCount', function(req, res) {
+    if(!req.body.token||!req.body.query) {
+        res.json(responses.get('AUTH_MISSING_ARGS', {}, null, null, req));
+        return;
+    }
+    admin.auth().verifyIdToken(req.body.token).then(function(decodedToken) {
+        var query = req.body.query;
+        switch(query) {
+            case 'your_checkins':
+                conn.execute(
+                    'SELECT COUNT(*) AS entryCount FROM check_in WHERE uid=?',
+                    [decodedToken.uid],
+                    function(err, results, fields) {
+                        res.json(responses.get('RESULT_COUNT_GET_SUCCESS', {resultCount: parseInt(results[0]['entryCount'])}, null, decodedToken.uid, req));
+                    });
+                return;
+            case 'others_checkins':
+                conn.execute(
+                    'SELECT COUNT(*) AS entryCount FROM check_in_others WHERE recipient_uid=?',
+                    [decodedToken.uid],
+                    function(err, results, fields) {
+                        res.json(responses.get('RESULT_COUNT_GET_SUCCESS', {resultCount: parseInt(results[0]['entryCount'])}, null, decodedToken.uid, req));
+                    });
+                return;
+            case 'your_checkin_requests':
+                res.json(responses.get('RESULT_COUNT_GET_SUCCESS', {resultCount: 0}, null, decodedToken.uid, req));
+                return;
+            case 'others_checkin_requests':
+                res.json(responses.get('RESULT_COUNT_GET_SUCCESS', {resultCount: 0}, null, decodedToken.uid, req));
+                return;
+            default:
+                res.json(responses.get('MALFORMED_ARGUMENT', {}, null, decodedToken.uid, req));
+                return;
+        }
     }).catch(function(err) {
         res.json(responses.get('AUTH_BAD_TOKEN', {}, err, null, req));
     });
@@ -530,13 +678,12 @@ function sendEmails(uid, emails, info, req, callback) {
         });
     });
 }
-function sendPushNotifications(uid, emails, info, callback) {
+function sendPushNotifications(uid, emails, info, checkinId, callback) {
     admin.auth().getUser(uid).then(function(user) {
         var title = user.displayName + ' has checked in';
         var titleSelf = 'You have checked in';
         var summary = getSummary(user.displayName);
         var summarySelf = getSummary('You');
-        var message = [];
         function getSummary(displayName) {
             var out = [];
             if(info.rating !== -1) {
@@ -561,33 +708,8 @@ function sendPushNotifications(uid, emails, info, callback) {
         summary = summary.join('. ');
         summarySelf = summarySelf.join('. ');
 
-        var location = JSON.parse(info.location);
-
         // if(info.rating !== -1) message += '<p>Rating: ' + info.rating + ' stars</p>';
-        if(info.message) {
-            message.push({
-                title: 'Message',
-                text: info.message
-            });
-        }
-        if(info.image_id) {
-            message.push({
-                title: 'Image',
-                image_url: global.domain + '/user/image/get/' + info.image_id
-            });
-        }
-        if(info.location) {
-            message.push({
-                title: 'Location',
-                location: location
-            });
-        }
-
-        if(message.length < 1) {
-            message.push({
-                text: 'No details were provided'
-            });
-        }
+        var message = constructJsonMessage(info);
 
         addActivity(user.uid, titleSelf, summarySelf, message, 'CHECKIN_S', function(err) {
             if(err) console.log(err);
@@ -600,6 +722,14 @@ function sendPushNotifications(uid, emails, info, callback) {
                     addActivity(user.uid, title, summary, message, 'CHECKIN_R', function(err) {
                         if(err) console.log(err);
                     });
+                    if(checkinId !== -1) {
+                        conn.execute(
+                            'INSERT INTO check_in_others (recipient_uid, checkin_id) VALUES (?, ?)',
+                            [user.uid, checkinId],
+                            function (err, results, fields) {
+
+                            });
+                    }
                     conn.execute(
                         'SELECT token FROM fcm_tokens WHERE uid=?',
                         [user.uid],
@@ -651,6 +781,35 @@ function addActivity(uid, title, summary, message, type, callback) {
             }
         });
 }
+function constructJsonMessage(info) {
+    var message = [];
+    if(info.message) {
+        message.push({
+            title: 'Message',
+            text: info.message
+        });
+    }
+    if(info.image_id) {
+        message.push({
+            title: 'Image',
+            image_url: global.domain + '/user/image/get/' + info.image_id
+        });
+    }
+    if(info.location) {
+        var location = JSON.parse(info.location);
+        message.push({
+            title: 'Location',
+            location: location
+        });
+    }
+
+    if(message.length < 1) {
+        message.push({
+            text: 'No details were provided'
+        });
+    }
+    return message;
+}
 function generateId(length) {
     length = length || 32;
     var text = "";
@@ -694,6 +853,11 @@ function getMapForLocation(location) {
     });
 
     return global.domain + '/user/maps/get/' + center;
+}
+
+function standardDateFormat(timestamp, timezone) {
+    timezone = timezone || 'UTC';
+    return moment(timestamp).tz(timezone).format('MMMM Do YYYY, h:mm a [(' + timezone + ')]');
 }
 
 function shallowClone(obj) {

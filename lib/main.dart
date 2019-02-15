@@ -12,6 +12,7 @@ import 'package:the_check_in/util/rating_widget.dart' show RatingWidget;
 import 'package:the_check_in/util/raised_icon_button.dart' show RaisedIconButton;
 import 'package:the_check_in/util/form_input.dart' show FormInput;
 import 'package:the_check_in/view/activity_widget.dart';
+import 'package:the_check_in/view/history_screen.dart';
 import 'package:the_check_in/view/recipient_selector.dart';
 import 'package:the_check_in/view/settings_screen.dart';
 import 'package:the_check_in/view/user_screen.dart' show UserScreen;
@@ -328,6 +329,15 @@ class _LandingScreenState extends State<LandingScreen> {
                     Navigator.push(context, MaterialPageRoute(builder: (context) => ProfileScreen(fuser)));
                   });
                 }
+            ),
+            ListTile(
+              leading: Icon(Icons.access_alarms),
+              title: Text('History'),
+              onTap: () {
+                _drawerTap(() {
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => HistoryScreen(fuser)));
+                });
+              }
             ),
             ListTile(
               leading: Icon(Icons.label),

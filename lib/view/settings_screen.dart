@@ -32,16 +32,14 @@ class SettingsScreenState extends State<SettingsScreen> {
     String token = await _user.getIdToken();
     BackendStatusResponse res = await FirebaseBackend.getSettings(token);
     settingsJson = await FirebaseBackend.getSettingsScreen();
-    print(settingsJson);
-
-    dynamic settingsAttribute = json.decode(res.raw['value']);
-    settingsAttribute.forEach((k, v) => settingValues[k] = v);
 
     if(res.raw['value'] == null) {
       await FirebaseBackend.setSettings(token, DEFAULT_SETTINGS);
       _loadSettings();
     }
     else {
+      dynamic settingsAttribute = json.decode(res.raw['value']);
+      settingsAttribute.forEach((k, v) => settingValues[k] = v);
       setState(() {
         _loading = false;
       });

@@ -113,6 +113,26 @@ class FirebaseBackend {
     String jsonStr = await response.stream.bytesToString();
     return BackendStatusResponse.fromJSON(json.decode(jsonStr));
   }
+  static Future<dynamic> getCheckIns(String token, int quantity, int page, String query) async {
+    http.Client client = new http.Client();
+    http.Request request = new http.Request('POST', new Uri.http(baseUrl, '/user/checkIn/get'));
+
+    request.bodyFields = {'token': token, 'quantity': quantity.toString(), 'page': page.toString(), 'query': query};
+
+    http.StreamedResponse response = await client.send(request);
+    String jsonStr = await response.stream.bytesToString();
+    return json.decode(jsonStr);
+  }
+  static Future<BackendStatusResponse> getCheckInsResultCount(String token, String query) async {
+    http.Client client = new http.Client();
+    http.Request request = new http.Request('POST', new Uri.http(baseUrl, '/user/checkIn/get/resultCount'));
+
+    request.bodyFields = {'token': token, 'query': query};
+
+    http.StreamedResponse response = await client.send(request);
+    String jsonStr = await response.stream.bytesToString();
+    return BackendStatusResponse.fromJSON(json.decode(jsonStr));
+  }
   static Future<BackendStatusResponse> getSettings(String token) async {
     http.Client client = new http.Client();
     http.Request request = new http.Request('POST', new Uri.http(baseUrl, '/user/attribute/settings/get'));
