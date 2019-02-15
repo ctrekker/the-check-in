@@ -100,6 +100,10 @@ var responses = {
         type: 'success',
         code: 'recipient/remove-success'
     },
+    RESULT_COUNT_GET_SUCCESS: {
+        type: 'success',
+        code: 'result-count/get-success'
+    },
     ACTIVITY_GET_SUCCESS: {
         type: 'success',
         code: 'activity/get-success'

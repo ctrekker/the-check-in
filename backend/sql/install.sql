@@ -41,7 +41,17 @@ CREATE TABLE check_in
   message TEXT,
   image_id VARCHAR(32),
   location TEXT,
-  recipients VARCHAR(128)
+  recipients VARCHAR(128),
+  type VARCHAR(12)
+);
+
+# TABLE others_check_in
+DROP TABLE IF EXISTS check_in_others;
+CREATE TABLE check_in_others
+(
+  id INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
+  recipient_uid VARCHAR(36) NOT NULL,
+  checkin_id INT NOT NULL
 );
 
 # TABLE recipients
