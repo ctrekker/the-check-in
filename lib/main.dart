@@ -35,6 +35,10 @@ void main() {
   cameraInit();
 }
 
+int currentTimeMillis() {
+  return new DateTime.now().millisecondsSinceEpoch;
+}
+
 class MyApp extends StatefulWidget {
   @override
   _MyAppState createState() => new _MyAppState();
@@ -420,16 +424,27 @@ class _CheckInScreenState extends State<CheckInScreen> {
     _recipientWidget = RecipientSelector(fuser, _handleOffline);
   }
 
+  int _lastSnackBarShow = currentTimeMillis();
+
   void _submitDetails(callback) async {
+    String message = _attachmentsWidget.state.getMessage();
+    String imagePath = _attachmentsWidget.state.getImagePath();
+    List<int> recipients = _recipientWidget.state.getRecipients();
+    if(recipients.length <= 0) {
+      if(currentTimeMillis() - _lastSnackBarShow > 1500) {
+        scaffoldKey.currentState.showSnackBar(SnackBar(content: Text('Please select at least 1 recipient'), duration: Duration(milliseconds: 1500)));
+        _lastSnackBarShow = currentTimeMillis();
+      }
+      return;
+    }
+
     setState(() {
       _loading = true;
     });
 
     //int stars = _ratingWidget.state.getValue();
     //if(stars < 0) stars = -1;
-    String message = _attachmentsWidget.state.getMessage();
-    String imagePath = _attachmentsWidget.state.getImagePath();
-    List<int> recipients = _recipientWidget.state.getRecipients();
+
     Map<String, double> location;
 
     if(_shareLocationValue) {
