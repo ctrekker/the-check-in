@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>About Check-In Emails</title>
+    <link rel="stylesheet" type="text/css" href="/stylesheets/email_action.css"/>
+    <script>
+        window.onload=function() {
+            var emailEncodedField = document.getElementById('emailEncodedField');
+            var search = window.location.search;
+            emailEncodedField.value = search?search.substring(1, search.length):'';
+        }
+    </script>
+    <style>
+        form {
+            margin-left: auto;
+            margin-right: auto;
+        }
+        input[type='button'], input[type='submit'] {
+            background-color: #5a7eff;
+            border: 1px solid black;
+            color: white;
+            border-radius: 20px;
+            padding: 10px;
+            margin-left: 20px;
+        }
+        #cancel {
+            color: black;
+            background-color: #dedede;
+        }
+    </style>
+</head>
+<body>
+<div class="content-container">
+    <div class="content-wrapper">
+        <h2>Unsubscribe From Check-In Emails</h2>
+        <p>Are you sure you want to unsubscribe from all Check-In emails? This action is forceful, and is difficult to reverse.</p>
+        <form action="/unsubscribe" method="post">
+            <input type="submit" name="unsubscribe_button" value="Yes, Unsubscribe Me"/>
+            <input type="button" id="cancel" onclick="window.open('','_self').close();window.location='/about-emails'" value="No, never mind"/>
+            <input type="hidden" id="emailEncodedField" name="email_encoded" value=""/>
+        </form>
+    </div>
+</div>
+</body>
+</html>

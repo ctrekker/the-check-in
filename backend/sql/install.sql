@@ -95,6 +95,22 @@ CREATE TABLE activity
   send_timestamp TIMESTAMP DEFAULT NOW()
 );
 
+DROP TABLE IF EXISTS feedback;
+CREATE TABLE feedback
+(
+  id INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
+  timestamp DATETIME DEFAULT NOW(),
+  type VARCHAR(32) NOT NULL,
+  message TEXT NOT NULL
+);
+
+DROP TABLE IF EXISTS email_blacklist;
+CREATE TABLE email_blacklist(
+  id INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
+  timestamp DATETIME DEFAULT NOW(),
+  email VARCHAR(254)
+);
+
 # attributes.sql
 DELETE FROM attributes;
 

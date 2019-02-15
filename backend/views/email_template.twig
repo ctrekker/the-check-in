@@ -29,7 +29,7 @@
                     <h4 style="margin:5px">Get the app!</h4>
                     <img style="width:100%" src="{{ domain }}/google-play-badge.png"/>
                     <div style="padding:13px;margin-top:-12px"><img style="width:100%" src="{{ domain }}/app-store-badge.png"/></div>
-                    <p style="margin:5px;margin-top:0;color:grey;font-size:12px">The Check In app provides an easy way to receive checkins like this one</p>
+                    <p style="margin:5px;margin-top:0;color:grey;font-size:12px">The Check In app provides a convenient way to receive checkins like this one</p>
                 </div>
             </td>
         </tr>
@@ -50,18 +50,18 @@
                 <tr>
                     <td style="padding:20px">
                         <div style="margin-bottom:5px">
-                            <a style="color:#d0d0d0">Get the app</a>
+                            <a href="{{ domain }}/get-app?{{ email_encoded }}" style="color:#d0d0d0">Get the app</a>
                         </div>
                         <div style="">
-                            <a style="color:#d0d0d0">About this message</a>
+                            <a href="{{ domain }}/about-emails?{{ email_encoded }}" style="color:#d0d0d0">About this message</a>
                         </div>
                     </td>
                     <td colspan="2" style="padding:20px" align="right">
                         <div style="margin-bottom:5px">
-                            <a style="color:#d0d0d0">Unsubscribe</a>
+                            <a href="{{ domain }}/unsubscribe?{{ email_encoded }}" style="color:#d0d0d0">Unsubscribe</a>
                         </div>
                         <div>
-                            <a style="color:#d0d0d0">Request removal of contact</a>
+                            <!--<a style="color:#d0d0d0">Request removal of contact</a>-->
                         </div>
                     </td>
                 </tr>
