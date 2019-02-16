@@ -96,177 +96,176 @@ class _UserScreenState extends State<UserScreen> {
   @override
   Widget build(BuildContext context) {
     Widget _signInContainer = ListView(
-        padding: EdgeInsets.all(32.0),
-        children: [Form(
-            key: _siFormKey,
-            child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  TextFormField(
-                      keyboardType: TextInputType.emailAddress,
-                      decoration: InputDecoration(
-                          hintText: 'you@example.com',
-                          labelText: 'Email Address'
-                      ),
-                      validator: (value) {
-                        if(value.isEmpty || !_isEmail(value)) return 'Please enter a valid email';
-                      },
-                      onSaved: (value) {
-                        _email = value;
+      padding: EdgeInsets.all(32.0),
+      children: [Form(
+        key: _siFormKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            TextFormField(
+              keyboardType: TextInputType.emailAddress,
+              decoration: InputDecoration(
+                hintText: 'you@example.com',
+                labelText: 'Email Address'
+              ),
+              validator: (value) {
+                if(value.isEmpty || !_isEmail(value)) return 'Please enter a valid email';
+              },
+              onSaved: (value) {
+                _email = value;
+              }
+          ),
+          TextFormField(
+            obscureText: true,
+            decoration: InputDecoration(
+              labelText: 'Password'
+            ),
+            validator: (value) {
+              if(value.isEmpty) return 'Please enter a password';
+            },
+            onSaved: (value) {
+              _password = value;
+            }
+          ),
+          ButtonBar(
+            children: () {
+              List<Widget> _c = [];
+              if(_showLoader) _c.add(CircularProgressIndicator());
+              _c.addAll([
+                RichText(
+                  text: TextSpan(
+                    text: 'Forgot password?',
+                    style: TextStyle(color: Colors.blue),
+                    recognizer: TapGestureRecognizer()
+                      ..onTap = () {
+                        Navigator.push(context, MaterialPageRoute(builder: (context) => ForgotPasswordScreen())).then((val) {
+                          if(val == true) {
+                            _scaffoldKey.currentState.showSnackBar(
+                                SnackBar(content: Text('A recovery email has been sent')));
+                          }
+                        });
                       }
-                  ),
-                  TextFormField(
-                      obscureText: true,
-                      decoration: InputDecoration(
-                          labelText: 'Password'
-                      ),
-                      validator: (value) {
-                        if(value.isEmpty) return 'Please enter a password';
-                      },
-                      onSaved: (value) {
-                        _password = value;
-                      }
-                  ),
-                  ButtonBar(
-                      children: () {
-                        List<Widget> _c = [];
-                        if(_showLoader) _c.add(CircularProgressIndicator());
-                        _c.addAll([
-                          RichText(
-                            text: TextSpan(
-                              text: 'Forgot password?',
-                              style: TextStyle(color: Colors.blue),
-                              recognizer: TapGestureRecognizer()
-                                ..onTap = () {
-                                  Navigator.push(context, MaterialPageRoute(builder: (context) => ForgotPasswordScreen())).then((val) {
-                                    if(val == true) {
-                                      _scaffoldKey.currentState.showSnackBar(
-                                          SnackBar(content: Text('A recovery email has been sent')));
-                                    }
-                                  });
-                                }
-                            )
-                          ),
-                          RaisedButton(
-                              child: Text('Log In'),
-                              onPressed: () {
-                                if(_siFormKey.currentState.validate()) {
-                                  _siSubmit();
-                                }
-                              }
-                          ),
-                        ]);
-                        return _c;
-                      }()
                   )
-                ]
-            )
-        )]
+                ),
+                RaisedButton(
+                    child: Text('Log In'),
+                    onPressed: () {
+                      if(_siFormKey.currentState.validate()) {
+                        _siSubmit();
+                      }
+                    }
+                ),
+              ]);
+              return _c;
+            }())
+          ]
+        )
+      )]
     );
     Widget _signUpContainer = ListView(
-        padding: EdgeInsets.all(32.0),
-        children: [Form(
-            key: _suFormKey,
-            child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  TextFormField(
-                      decoration: InputDecoration(
-                          labelText: 'Name'
-                      ),
-                      validator: (value) {
-                        if(value.isEmpty) return 'Please enter your name';
-                        if(value.length > 40) return 'Please enter a name shorter than 40 characters';
-                      },
-                      onSaved: (value) {
-                        _name = value;
+      padding: EdgeInsets.all(32.0),
+      children: [Form(
+        key: _suFormKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            TextFormField(
+              decoration: InputDecoration(
+                labelText: 'Name'
+              ),
+              validator: (value) {
+                if(value.isEmpty) return 'Please enter your name';
+                if(value.length > 40) return 'Please enter a name shorter than 40 characters';
+              },
+              onSaved: (value) {
+                _name = value;
+              }
+            ),
+            TextFormField(
+              keyboardType: TextInputType.emailAddress,
+              decoration: InputDecoration(
+                hintText: 'you@example.com',
+                labelText: 'Email'
+              ),
+              validator: (value) {
+                if(value.isEmpty) return 'Please enter your email';
+                if(!_isEmail(value)) return 'Please enter a valid email';
+                if(!_emailUnique) return 'That email is already in use';
+              },
+              onSaved: (value) {
+                _email = value;
+              }
+            ),
+            TextFormField(
+              obscureText: true,
+              decoration: InputDecoration(
+                labelText: 'Password'
+              ),
+              validator: (value) {
+                _password = value;
+                if(value.isEmpty) return 'Please enter your password';
+                if(value.length < 6) return 'Passwords must be at least 6 characters long';
+              },
+              onSaved: (value) {
+                _password = value;
+              }
+            ),
+            TextFormField(
+              obscureText: true,
+              decoration: InputDecoration(
+                labelText: 'Confirm Password'
+              ),
+              validator: (value) {
+                _passwordConfirm = value;
+                if(_password != _passwordConfirm) return 'Please enter the same password you did above';
+              },
+              onSaved: (value) {
+                _passwordConfirm = value;
+              }
+            ),
+            ButtonBar(
+              children: () {
+                List<Widget> _c = [];
+                if(_showLoader) _c.add(CircularProgressIndicator());
+                _c.addAll([
+                  RaisedButton(
+                    child: Text('Create Account'),
+                    onPressed: () {
+                      if(_suFormKey.currentState.validate()) {
+                        _suSubmit();
                       }
+                    }
                   ),
-                  TextFormField(
-                      keyboardType: TextInputType.emailAddress,
-                      decoration: InputDecoration(
-                          hintText: 'you@example.com',
-                          labelText: 'Email'
-                      ),
-                      validator: (value) {
-                        if(value.isEmpty) return 'Please enter your email';
-                        if(!_isEmail(value)) return 'Please enter a valid email';
-                        if(!_emailUnique) return 'That email is already in use';
-                      },
-                      onSaved: (value) {
-                        _email = value;
-                      }
-                  ),
-                  TextFormField(
-                      obscureText: true,
-                      decoration: InputDecoration(
-                          labelText: 'Password'
-                      ),
-                      validator: (value) {
-                        _password = value;
-                        if(value.isEmpty) return 'Please enter your password';
-                        if(value.length < 6) return 'Passwords must be at least 6 characters long';
-                      },
-                      onSaved: (value) {
-                        _password = value;
-                      }
-                  ),
-                  TextFormField(
-                      obscureText: true,
-                      decoration: InputDecoration(
-                          labelText: 'Confirm Password'
-                      ),
-                      validator: (value) {
-                        _passwordConfirm = value;
-                        if(_password != _passwordConfirm) return 'Please enter the same password you did above';
-                      },
-                      onSaved: (value) {
-                        _passwordConfirm = value;
-                      }
-                  ),
-                  ButtonBar(
-                      children: () {
-                        List<Widget> _c = [];
-                        if(_showLoader) _c.add(CircularProgressIndicator());
-                        _c.addAll([
-                          RaisedButton(
-                              child: Text('Create Account'),
-                              onPressed: () {
-                                if(_suFormKey.currentState.validate()) {
-                                  _suSubmit();
-                                }
-                              }
-                          ),
-                        ]);
-                        return _c;
-                      }()
-                  )
-                ]
+                ]);
+                return _c;
+              }()
             )
-        )]
+          ]
+        )
+      )]
     );
 
     return DefaultTabController(
-        length: 2,
-        child: Scaffold(
-            key: _scaffoldKey,
-            appBar: AppBar(
-              title: appTitle,
-              bottom: TabBar(
-                  tabs: <Widget>[
-                    Tab(text: 'Log In'),
-                    Tab(text: 'Create Account')
-                  ]
-              ),
-              automaticallyImplyLeading: false,
-            ),
-            body: TabBarView(
-                children: <Widget>[
-                  _signInContainer,
-                  _signUpContainer,
-                ]
-            )
+      length: 2,
+      child: Scaffold(
+        key: _scaffoldKey,
+        appBar: AppBar(
+          title: appTitle,
+          bottom: TabBar(
+            tabs: <Widget>[
+              Tab(text: 'Log In'),
+              Tab(text: 'Create Account')
+            ]
+          ),
+          automaticallyImplyLeading: false,
+        ),
+        body: TabBarView(
+          children: <Widget>[
+            _signInContainer,
+            _signUpContainer,
+          ]
         )
+      )
     );
   }
 }
