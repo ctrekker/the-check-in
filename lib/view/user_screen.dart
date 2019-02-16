@@ -1,8 +1,10 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart' show FirebaseAuth, FirebaseUser, PlatformException;
 import 'dart:async';
 import 'package:the_check_in/main.dart' show auth, appTitle;
 import 'package:the_check_in/util/firebase_custom.dart';
+import 'package:the_check_in/view/forgot_password_screen.dart';
 
 class UserScreen extends StatefulWidget {
   @override
@@ -130,6 +132,21 @@ class _UserScreenState extends State<UserScreen> {
                         List<Widget> _c = [];
                         if(_showLoader) _c.add(CircularProgressIndicator());
                         _c.addAll([
+                          RichText(
+                            text: TextSpan(
+                              text: 'Forgot password?',
+                              style: TextStyle(color: Colors.blue),
+                              recognizer: TapGestureRecognizer()
+                                ..onTap = () {
+                                  Navigator.push(context, MaterialPageRoute(builder: (context) => ForgotPasswordScreen())).then((val) {
+                                    if(val == true) {
+                                      _scaffoldKey.currentState.showSnackBar(
+                                          SnackBar(content: Text('A recovery email has been sent')));
+                                    }
+                                  });
+                                }
+                            )
+                          ),
                           RaisedButton(
                               child: Text('Log In'),
                               onPressed: () {

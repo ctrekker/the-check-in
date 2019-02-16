@@ -5,6 +5,7 @@ import 'package:flutter/src/widgets/icon_data.dart';
 import 'package:the_check_in/util/config.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 import 'dart:convert';
 import 'dart:async';
@@ -183,6 +184,9 @@ class FirebaseBackend {
     http.StreamedResponse response = await client.send(request);
     String jsonStr = await response.stream.bytesToString();
     return BackendStatusResponse.fromJSON(json.decode(jsonStr));
+  }
+  static Future<void> sendPasswordResetEmail(email) async {
+    await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
   }
 
   static dynamic parseSettings(BackendStatusResponse r) {
