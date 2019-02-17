@@ -112,6 +112,10 @@ var responses = {
         type: 'success',
         code: 'upload/success'
     },
+    UPLOAD_ERROR: {
+        type: 'error',
+        code: 'upload/error'
+    },
     UPLOAD_DATA_MALFORMED: {
         type: 'error',
         code: 'upload/malformed-data'

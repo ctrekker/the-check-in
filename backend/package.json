@@ -24,6 +24,7 @@
     "nodemailer": "^4.6.8",
     "nodemailer-smtp-transport": "^2.7.4",
     "twig": "~0.10.3",
-    "request": "latest"
+    "request": "latest",
+    "@google-cloud/storage": "^2.4.2"
   }
 }
