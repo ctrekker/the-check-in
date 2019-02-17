@@ -2,7 +2,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class Config {
   static String mapsApiKey = 'AIzaSyCc-3ISZ1GuZ9jC6SbDmr-7m_pjYVKlf2c';
-  static String backendUrl =  '192.168.1.20:3000';
+  static String backendUrl =  'tci.burnscoding.com:3000';
   static SharedPreferences prefs;
 
   static void init() {
