@@ -9,12 +9,11 @@ var smtpTransport = require('nodemailer-smtp-transport');
 var bodyParser = require('body-parser');
 var fs = require('fs');
 var GoogleMapsAPI = require('googlemaps');
+var gcstorage = require('@google-cloud/storage');
 
 var config = require('./config.json');
 
-if(!fs.existsSync('images')) fs.mkdir('images');
-if(!fs.existsSync('cache')) fs.mkdir('cache');
-if(!fs.existsSync('cache/maps')) fs.mkdir('cache/maps');
+if(!fs.existsSync('tmp')) fs.mkdir('tmp');
 
 global.conn = mysql.createConnection({
     host: config.database.host,
@@ -33,6 +32,12 @@ global.email = nodemailer.createTransport(smtpTransport({
 global.gmaps = new GoogleMapsAPI({
     key: config.gmaps.key
 });
+global.gstorage = new gcstorage.Storage({
+    projectId: 'health-check-4',
+    keyFilename: 'firebase-admin-key.json'
+});
+global.cacheBucket = gstorage.bucket('the-check-in-cache');
+global.cacheBucketRoot = 'https://storage.googleapis.com/the-check-in-cache';
 global.domain = config.domain;
 conn.connect(function(err) {
     if(err) {

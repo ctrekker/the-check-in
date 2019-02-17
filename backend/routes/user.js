@@ -559,27 +559,35 @@ router.post('/image/upload', function(req, res) {
     }
     admin.auth().verifyIdToken(req.body.token).then(function(decodedToken) {
         imageId = generateId();
-        fs.writeFile('images/' + imageId + '.png', req.body.image, 'base64', function(err) {
+
+        var img_local = 'tmp/' + imageId + '.png';
+        fs.writeFile(img_local, req.body.image, 'base64', function(err) {
             if(err) {
                 res.json(responses.get('UPLOAD_DATA_MALFORMED', {}, err, decodedToken.uid, req));
             }
             else {
-                res.json(responses.get('UPLOAD_SUCCESS', {image_id: imageId}, null, decodedToken.uid, req));
+                var img = cacheBucket.file('images/' + imageId);
+                fs.createReadStream(img_local)
+                    .pipe(img.createWriteStream({
+                        metadata: {
+                            contentType: 'image/png'
+                        }
+                    }))
+                    .on('error', function(err) {
+                        res.json(responses.get('UPLOAD_ERROR', {}, err, decodedToken.uid, req));
+                    })
+                    .on('finish', function() {
+                        fs.unlink(img_local, function(err) {
+                            if(err) {
+                                res.json(responses.get('UPLOAD_ERROR', {}, err, decodedToken.uid, req));
+                                return;
+                            }
+                            res.json(responses.get('UPLOAD_SUCCESS', {image_id: imageId}, null, decodedToken.uid, req));
+                        });
+                    });
             }
         });
     });
-});
-router.all('/image/get/:imageId', function(req, res) {
-    res.sendFile(path.resolve('images/' + req.params.imageId + '.png'));
-});
-router.all('/maps/get/:mapId', function(req, res) {
-    var cachePath = path.resolve('cache/maps/' + req.params.mapId + '.png');
-    if(!fs.existsSync(cachePath)) {
-        res.send('No file');
-    }
-    else {
-        res.sendFile(cachePath)
-    }
 });
 
 function getRecipients(token, callback) {
@@ -635,7 +643,7 @@ function sendEmails(uid, emails, info, req, callback) {
         var emailContent = '';
         emailContent += '<p>' + (info.rating === -1 ? 'No rating was given' : 'Rating: ' + info.rating + ' of 5 stars') + '</p>';
         emailContent += '<p>' + (info.message === null ? 'No message was sent' : 'Message: ' + info.message) + '</p>';
-        emailContent += '<p>' + (info.image_id === null ? 'No image was sent' : '<img src="' + global.domain + '/user/image/get/' + info.image_id + '"/>') + '</p>';
+        emailContent += '<p>' + (info.image_id === null ? 'No image was sent' : '<img src="' + global.cacheBucketRoot + '/images/' + info.image_id + '"/>') + '</p>';
         getAttribute(uid, 'timezone', req, function(err, res) {
             if(err) {
                 console.log('error: '+res);
@@ -651,6 +659,7 @@ function sendEmails(uid, emails, info, req, callback) {
                 function sendEmail(emailStr) {
                     Twig.renderFile('./views/email_template.twig', {
                         domain: global.domain,
+                        cacheRoot: global.cacheBucketRoot,
                         display_name: user.displayName,
                         message: info.message || undefined,
                         image_id: info.image_id || undefined,
@@ -799,7 +808,7 @@ function constructJsonMessage(info) {
     if(info.image_id) {
         message.push({
             title: 'Image',
-            image_url: global.domain + '/user/image/get/' + info.image_id
+            image_url: global.cacheBucketRoot + '/images/' + info.image_id
         });
     }
     if(info.location) {
@@ -854,12 +863,27 @@ function getMapForLocation(location) {
     };
     var url = global.gmaps.staticMap(params);
 
+    var local_map = './tmp/' + center + '.png';
     imageDownloader.image({
         url: url,
-        dest: './cache/maps/' + center + '.png'
+        dest: local_map
+    }).then(function() {
+        var cachedMap = cacheBucket.file('maps/' + center + '.png');
+        fs.createReadStream(local_map)
+            .pipe(cachedMap.createWriteStream({
+                metadata: {
+                    contentType: 'image/png'
+                }
+            }))
+            .on('error', function(err) {
+                console.log(err);
+            })
+            .on('finish', function() {
+                fs.unlinkSync(local_map);
+            });
     });
 
-    return global.domain + '/user/maps/get/' + center;
+    return global.cacheBucketRoot + '/maps/' + center + '.png';
 }
 
 function standardDateFormat(timestamp, timezone) {

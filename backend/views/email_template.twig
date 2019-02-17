@@ -21,7 +21,7 @@
         <tr>
             <td colspan="2" style="padding-left:20px;padding-right:20px">
                 <h3 style="margin:5px;margin-top:15px">Image</h3>
-                {% if image_id is defined %}<a href="{{ domain }}/user/image/get/{{ image_id }}"><img style="margin:5px;width:100%;box-shadow: 0 3px 6px 0 #a7a7a7" src="{{ domain }}/user/image/get/{{ image_id }}"/></a>{% endif %}
+                {% if image_id is defined %}<a href="{{ cacheRoot }}/images/{{ image_id }}"><img style="margin:5px;width:100%;box-shadow: 0 3px 6px 0 #a7a7a7" src="{{ cacheRoot }}/images/{{ image_id }}"/></a>{% endif %}
                 {% if image_id is not defined %}<p style="margin:5px">No image was sent</p>{% endif %}
             </td>
             <td rowspan="2" style="vertical-align:top">
@@ -36,7 +36,7 @@
         <tr>
             <td colspan="2" style="width:66%;padding-left:20px;padding-right:20px">
                 <h3 style="margin:5px;margin-top:15px">Location</h3>
-                {% if location is defined %}<a href="http://maps.google.com/maps?&z=10&q={{ location_latitude }}+{{ location_longitude }}&ll={{ location_latitude }}+{{ location_longitude }}"><img style="margin:5px;width:100%;box-shadow: 0 3px 6px 0 #a7a7a7" src="{{ domain }}/user/maps/get/{{ location_latitude }},{{ location_longitude }}"/>{% endif %}
+                {% if location is defined %}<a href="http://maps.google.com/maps?&z=10&q={{ location_latitude }}+{{ location_longitude }}&ll={{ location_latitude }}+{{ location_longitude }}"><img style="margin:5px;width:100%;box-shadow: 0 3px 6px 0 #a7a7a7" src="{{ cacheRoot }}/maps/{{ location_latitude }},{{ location_longitude }}.png"/>{% endif %}
                 {% if location is not defined %}<p style="margin:5px">No location data was sent</p>{% endif %}
             </td>
         </tr>

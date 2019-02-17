@@ -477,6 +477,8 @@ class _CheckInScreenState extends State<CheckInScreen> {
     if(imagePath != null) {
       uploadResponse = await FirebaseBackend.uploadImage(
           token, imagePath);
+      File img = File(imagePath);
+      await img.delete();
     }
 
     BackendStatusResponse response = await FirebaseBackend.checkIn(
