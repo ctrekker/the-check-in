@@ -256,6 +256,21 @@ class _LandingScreenState extends State<LandingScreen> {
         );
       }
     );
+    Widget checkInRequestButton = Builder(
+      builder: (BuildContext context) {
+        return RaisedButton(
+          child: Text('Request Check In'),
+          color: Colors.blue,
+          textColor: Colors.white,
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => CheckInRequestScreen()),
+            );
+          }
+        );
+      }
+    );
 
     if(!_showLoading) {
       activityWidget = ActivityWidget(fuser);
@@ -269,6 +284,7 @@ class _LandingScreenState extends State<LandingScreen> {
             if(_loggedIn) {
               return [
                 checkInButton,
+                checkInRequestButton,
                 activityWidget
               ];
             }
@@ -590,6 +606,87 @@ class _CheckInScreenState extends State<CheckInScreen> {
         ])
       )
     );
+  }
+}
+class CheckInRequestScreen extends StatefulWidget {
+  @override
+  State<StatefulWidget> createState() => CheckInRequestScreenState();
+}
+class CheckInRequestScreenState extends State<CheckInRequestScreen> {
+  bool _offline = true;
+  bool _loading = false;
+  RecipientSelector _recipientSelector;
+
+  void _handleOffline(isOffline) {
+    setState(() {
+      _offline = isOffline;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    _recipientSelector = new RecipientSelector(fuser, _handleOffline);
+
+    return new Scaffold(
+      appBar: AppBar(
+        title: Text('Request a Check In')
+      ),
+      body: Container(
+        padding: EdgeInsets.all(32.0),
+        child: SingleChildScrollView(
+          child: Column(
+            children: <Widget>[
+              _recipientSelector,
+              Divider(),
+              ButtonBar(
+                children: <Widget>[
+                  RaisedButton(
+                    child: Text('Cancel'),
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                  ),
+                  RaisedButton(
+                    child: () {
+                      Widget _finishText = Text('Finish');
+                      if(!_loading) return _finishText;
+                      else {
+                        return Row(
+                          children: <Widget>[
+                            Container(
+                                child: SizedBox(
+                                  child: CircularProgressIndicator(
+                                      valueColor: new AlwaysStoppedAnimation<Color>(Colors.white)
+                                  ),
+                                  width: 22.0,
+                                  height: 22.0,
+                                ),
+                                padding: EdgeInsets.only(right: 16.0)
+                            ),
+                            _finishText
+                          ],
+                        );
+                      }
+                    }(),
+                    color: Colors.blue,
+                    textColor: Colors.white,
+                    onPressed: (_offline) ? null : () {
+                      _submitDetails((BackendStatusResponse r) {
+                        Navigator.pop(context, r);
+                      });
+                    },
+                  )
+                ],
+              )
+            ],
+          )
+        )
+      )
+    );
+  }
+
+  void _submitDetails(callback) async {
+    callback(null);
   }
 }
 class CheckInAttachments extends StatefulWidget {
