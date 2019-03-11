@@ -104,11 +104,11 @@ class FirebaseBackend {
     String jsonStr = await response.stream.bytesToString();
     return BackendStatusResponse.fromJSON(json.decode(jsonStr));
   }
-  static Future<BackendStatusResponse> checkIn(String token, dynamic info, List<int> recipients) async {
+  static Future<BackendStatusResponse> checkIn(String token, dynamic info, List<int> recipients, dynamic flags) async {
     http.Client client = new http.Client();
     http.Request request = new http.Request('POST', new Uri.http(baseUrl, '/user/checkIn'));
 
-    request.bodyFields = {'token': token, 'info': json.encode(info), 'recipients': recipients.join(',')};
+    request.bodyFields = {'token': token, 'info': json.encode(info), 'recipients': recipients.join(','), 'flags': json.encode(flags)};
 
     http.StreamedResponse response = await client.send(request);
     String jsonStr = await response.stream.bytesToString();
@@ -237,6 +237,10 @@ class FirebaseBackend {
         return Icons.access_time;
       case 'CHECKIN_S':
         return Icons.access_time;
+      case 'CHECKIN_RR':
+        return Icons.arrow_forward;
+      case 'CHECKIN_RS':
+        return Icons.arrow_forward;
       default:
         return Icons.message;
     }

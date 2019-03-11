@@ -123,7 +123,7 @@ var responses = {
 };
 module.exports = {
     get: function(id, extra, err, uid, req) {
-        var baseResponse = responses[id];
+        var baseResponse = shallowClone(responses[id]);
         if(extra) {
             if(Object.keys(extra).length > 0) {
                 var keys = Object.keys(extra);

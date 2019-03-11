@@ -157,7 +157,7 @@ class _LandingScreenState extends State<LandingScreen> {
       if (fuser != null) {
         String token = await fuser.getIdToken();
         print(token);
-        FirebaseBackend.setTimezone(token, DateTime.now().timeZoneName);
+        FirebaseBackend.setTimezone(token, DateTime.now().timeZoneOffset.inHours.toString()+":"+DateTime.now().timeZoneName);
 
         FirebaseMessaging _firebaseMessaging = new FirebaseMessaging();
         _firebaseMessaging.configure(
@@ -262,11 +262,21 @@ class _LandingScreenState extends State<LandingScreen> {
           child: Text('Request Check In'),
           color: Colors.blue,
           textColor: Colors.white,
-          onPressed: () {
-            Navigator.push(
+          onPressed: () async {
+            BackendStatusResponse res = await Navigator.push(
               context,
               MaterialPageRoute(builder: (context) => CheckInRequestScreen()),
             );
+            if(res != null) {
+              if(res.type == 'success') {
+                Scaffold.of(context).showSnackBar(
+                    SnackBar(content: Text(res.message)));
+              }
+              else if(res.type == 'warning') {
+                Scaffold.of(context).showSnackBar(
+                    SnackBar(content: Text(res.message)));
+              }
+            }
           }
         );
       }
@@ -500,7 +510,8 @@ class _CheckInScreenState extends State<CheckInScreen> {
     BackendStatusResponse response = await FirebaseBackend.checkIn(
       token,
       FirebaseBackend.constructCheckInInfo(message: message, imageId: uploadResponse == null || uploadResponse.type == 'error' ? null : uploadResponse.raw['image_id'], location: location),
-      recipients);
+      recipients,
+      {});
 
     bool close = true;
     if(response.type == 'error') {
@@ -616,6 +627,8 @@ class CheckInRequestScreenState extends State<CheckInRequestScreen> {
   bool _offline = true;
   bool _loading = false;
   RecipientSelector _recipientSelector;
+  GlobalKey<ScaffoldState> scaffoldKey = GlobalKey();
+  int _lastSnackBarShow = currentTimeMillis();
 
   void _handleOffline(isOffline) {
     setState(() {
@@ -623,11 +636,14 @@ class CheckInRequestScreenState extends State<CheckInRequestScreen> {
     });
   }
 
+  CheckInRequestScreenState() {
+    _recipientSelector = RecipientSelector(fuser, _handleOffline);
+  }
+
   @override
   Widget build(BuildContext context) {
-    _recipientSelector = new RecipientSelector(fuser, _handleOffline);
-
     return new Scaffold(
+      key: scaffoldKey,
       appBar: AppBar(
         title: Text('Request a Check In')
       ),
@@ -686,7 +702,38 @@ class CheckInRequestScreenState extends State<CheckInRequestScreen> {
   }
 
   void _submitDetails(callback) async {
-    callback(null);
+    List<int> recipients = _recipientSelector.state.getRecipients();
+    if(recipients.length <= 0) {
+      if(currentTimeMillis() - _lastSnackBarShow > 1500) {
+        scaffoldKey.currentState.showSnackBar(SnackBar(content: Text('Please select at least 1 recipient'), duration: Duration(milliseconds: 1500)));
+        _lastSnackBarShow = currentTimeMillis();
+      }
+      return;
+    }
+
+    setState(() {
+      _loading = true;
+    });
+
+    String token = await fuser.getIdToken();
+
+    BackendStatusResponse response = await FirebaseBackend.checkIn(
+        token,
+        FirebaseBackend.constructCheckInInfo(),
+        recipients,
+        { "REQUEST_CHECKIN": true });
+
+    bool close = true;
+    if(response.type == 'error') {
+      scaffoldKey.currentState.showSnackBar(SnackBar(content: Text('There was an error checking in')));
+      print(response);
+      close = false;
+    }
+
+    setState(() {
+      _loading = false;
+      if(close) callback(response);
+    });
   }
 }
 class CheckInAttachments extends StatefulWidget {
