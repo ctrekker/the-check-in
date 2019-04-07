@@ -234,13 +234,13 @@ class FirebaseBackend {
   static IconData typeToIcon(String type) {
     switch(type) {
       case 'CHECKIN_R':
-        return Icons.access_time;
+        return Icons.check;
       case 'CHECKIN_S':
-        return Icons.access_time;
+        return Icons.check;
       case 'CHECKIN_RR':
-        return Icons.arrow_forward;
+        return Icons.people;
       case 'CHECKIN_RS':
-        return Icons.arrow_forward;
+        return Icons.people;
       default:
         return Icons.message;
     }

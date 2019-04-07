@@ -343,7 +343,7 @@ class _LandingScreenState extends State<LandingScreen> {
               ),
             ),
             ListTile(
-                leading: Icon(Icons.access_time),
+                leading: Icon(Icons.check),
                 title: Text('Check In'),
                 onTap: () {
                   _drawerTap(() {
@@ -361,7 +361,7 @@ class _LandingScreenState extends State<LandingScreen> {
                 }
             ),
             ListTile(
-              leading: Icon(Icons.access_alarms),
+              leading: Icon(Icons.history),
               title: Text('History'),
               onTap: () {
                 _drawerTap(() {

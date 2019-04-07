@@ -371,78 +371,87 @@ router.post('/checkIn', function(req, res) {
         }
         if(!flags.REQUEST_CHECKIN) flags.REQUEST_CHECKIN = false;
 
-        conn.execute(
-            'INSERT INTO check_in (uid, rating, message, image_id, location, recipients, flag_request) VALUES (?, ?, ?, ?, ?, ?, ?)',
-            [decodedToken.uid, info.rating, info.message, info.image_id, info.location, recipients.join(','), flags.REQUEST_CHECKIN],
+        conn.execute('SELECT id FROM check_in ORDER BY id DESC LIMIT 1',
+            [],
             function(err, results, fields) {
-                if(err) {
-                    res.json(responses.get('GENERIC_DB_ERROR', {}, err, decodedToken.uid, req));
+                var checkinId = -1;
+                if (!err) {
+                    checkinId = results[0]['id'] + 1;
                 }
                 else {
-                    getRecipients(req.body.token, function(err, results) {
+                    res.json(responses.get('GENERIC_DB_ERROR', {}, err, decodedToken.uid, req));
+                    return;
+                }
+                conn.execute(
+                    'INSERT INTO check_in (id, uid, rating, message, image_id, location, recipients, flag_request) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+                    [checkinId, decodedToken.uid, info.rating, info.message, info.image_id, info.location, recipients.join(','), flags.REQUEST_CHECKIN],
+                    function(err, results, fields) {
                         if(err) {
-                            res.json(responses.get('RECIPIENT_GET_ERROR', {}, err, decodedToken.uid, req));
+                            res.json(responses.get('GENERIC_DB_ERROR', {}, err, decodedToken.uid, req));
                         }
                         else {
-                            info.location_image_url = info.location != null ? getMapForLocation(info.location) : null;
-                            var recipientEmails = [];
-                            var allEmails = [];
-                            var settingCallbacks = 0;
-                            var settingTarget = 0;
+                            getRecipients(req.body.token, function(err, results) {
+                                if(err) {
+                                    res.json(responses.get('RECIPIENT_GET_ERROR', {}, err, decodedToken.uid, req));
+                                }
+                                else {
+                                    info.location_image_url = info.location != null ? getMapForLocation(info.location) : null;
+                                    var recipientEmails = [];
+                                    var allEmails = [];
+                                    var settingCallbacks = 0;
+                                    var settingTarget = 0;
 
-                            for (var i = 0; i < results.length; i++) {
-                                var currentEmail = results[i].email;
-                                for (var j = 0; j < recipients.length; j++) {
-                                    if (results[i].id === parseInt(recipients[j]) && currentEmail != null) {
-                                        allEmails.push(currentEmail);
-                                        settingTarget++;
-                                        getSetting(decodedToken.uid, 'receive_emails', req, function (value, email) {
-                                            settingCallbacks++;
-                                            if (value !== false) {
-                                                recipientEmails.push(email);
-                                            }
-                                            if (settingCallbacks >= settingTarget) {
-                                                callback();
-                                            }
-                                        }, currentEmail);
+                                    for (var i = 0; i < results.length; i++) {
+                                        var currentEmail = results[i].email;
+                                        for (var j = 0; j < recipients.length; j++) {
+                                            if (results[i].id === parseInt(recipients[j]) && currentEmail != null) {
+                                                allEmails.push(currentEmail);
+                                                settingTarget++;
+                                                getSetting(decodedToken.uid, 'receive_emails', req, function (value, email) {
+                                                    settingCallbacks++;
+                                                    if (value !== false) {
+                                                        recipientEmails.push(email);
+                                                    }
+                                                    if (settingCallbacks >= settingTarget) {
+                                                        callback();
+                                                    }
+                                                }, currentEmail);
 
-                                        break;
+                                                break;
+                                            }
+                                        }
                                     }
-                                }
-                            }
 
-                            function callback() {
-                                if (recipientEmails.length > 0) {
-                                    sendEmails(decodedToken.uid, recipientEmails, info, flags, req, function (err) {
-                                        if (err) {
-                                            //responses.get('GENERIC_EMAIL_ERROR', {}, err, decodedToken.uid, req);
+                                    function callback() {
+                                        if (recipientEmails.length > 0) {
+                                            sendEmails(decodedToken.uid, recipientEmails, info, flags, req, function (err) {
+                                                if (err) {
+                                                    //responses.get('GENERIC_EMAIL_ERROR', {}, err, decodedToken.uid, req);
+                                                }
+                                            });
                                         }
-                                    });
-                                }
-                                conn.execute(
-                                    'SELECT LAST_INSERT_ID() AS checkinId',
-                                    [],
-                                    function (err, results, fields) {
-                                        var checkinId = -1;
-                                        if (!err) {
-                                            checkinId = results[0]['checkinId'];
-                                        }
+                                        // conn.execute(
+                                        //     'SELECT LAST_INSERT_ID() AS checkinId',
+                                        //     [],
+                                        //     function (err, results, fields) {
+
                                         sendPushNotifications(decodedToken.uid, allEmails, info, checkinId, flags.REQUEST_CHECKIN, function (err) {
                                             if (err) {
 
                                             }
                                         });
-                                    });
+                                        // });
 
-                                var custom = {};
-                                if(flags.REQUEST_CHECKIN) {
-                                    custom.message = 'You have now requested a check in';
+                                        var custom = {};
+                                        if(flags.REQUEST_CHECKIN) {
+                                            custom.message = 'You have now requested a check in';
+                                        }
+                                        res.json(responses.get('CHECKIN_SUCCESS', custom, null, decodedToken.uid, req));
+                                    }
                                 }
-                                res.json(responses.get('CHECKIN_SUCCESS', custom, null, decodedToken.uid, req));
-                            }
+                            });
                         }
                     });
-                }
             });
     }).catch(function(err) {
         res.json(responses.get('AUTH_BAD_TOKEN', {}, err, null, req));
@@ -533,6 +542,9 @@ router.post('/checkIn/get', function(req, res) {
                                     results[index]['uid'] = undefined;
                                 });
                             }
+                            if(results.length === 0) {
+                                res.json([]);
+                            }
                         });
                     });
                 break;
@@ -565,8 +577,8 @@ router.post('/checkIn/get/resultCount', function(req, res) {
             case 'others_checkin_requests':
                 flag_request = query !== 'others_checkins';
                 conn.execute(
-                    'SELECT COUNT(*) AS entryCount FROM check_in_others WHERE recipient_uid=? AND (SELECT flag_request FROM check_in WHERE id=checkin_id)',
-                    [decodedToken.uid],
+                    'SELECT COUNT(*) AS entryCount FROM check_in_others WHERE recipient_uid=? AND (SELECT flag_request FROM check_in WHERE id=checkin_id)=?',
+                    [decodedToken.uid, flag_request],
                     function(err, results, fields) {
                         res.json(responses.get('RESULT_COUNT_GET_SUCCESS', {resultCount: parseInt(results[0]['entryCount'])}, null, decodedToken.uid, req));
                     });
