@@ -206,19 +206,37 @@ class HistoryScreenState extends State<HistoryScreen> {
         else if(!_loading && index > 1 && _listItems == null) {
           return Container();
         }
-        else if(!_loading && index == 1) {
+        else if(!_loading && (index == 1 || index == _itemCount - 1) && _maxPage == -1) {
+          if(index == 1) {
+            String text = '';
+            if(_dropdownOptions.indexOf(_selectedOption) == 0) {
+              text = 'History for when you check in will show up here';
+            }
+            else if(_dropdownOptions.indexOf(_selectedOption) == 1) {
+              text = 'History for when other people check in with you will show up here';
+            }
+            else if(_dropdownOptions.indexOf(_selectedOption) == 2) {
+              text = 'History for when you send check in requests will show up here';
+            }
+            else if(_dropdownOptions.indexOf(_selectedOption) == 3) {
+              text = 'History for when others send you check in requests will show up here';
+            }
+            return Container(
+                padding: EdgeInsets.all(12.0),
+                child: Text(
+                    text,
+                    style: TextStyle(fontStyle: FontStyle.italic))
+            );
+          }
+          else {
+            return Container();
+          }
+        }
+        else if(!_loading && (index == 1 || index == _itemCount - 1)) {
           return Container(
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: _buildPaginatorButtons(),
-            )
-          );
-        }
-        else if(!_loading && index == _itemCount - 1) {
-          return Container(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: _buildPaginatorButtons()
             )
           );
         }
