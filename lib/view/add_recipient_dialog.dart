@@ -9,6 +9,7 @@ class AddRecipientDialog extends StatefulWidget {
   State<StatefulWidget> createState() => _AddRecipientDialogState();
 }
 class _AddRecipientDialogState extends State<AddRecipientDialog> {
+  final _scaffoldKey = GlobalKey<ScaffoldState>();
   final _formKey = GlobalKey<FormState>();
 
   bool _loading = false;
@@ -31,6 +32,15 @@ class _AddRecipientDialogState extends State<AddRecipientDialog> {
 
   void _addRecipient() async {
     if(_formKey.currentState.validate()) {
+      if(!_hasEmail && !_hasPhone) {
+        _scaffoldKey.currentState.showSnackBar(
+          SnackBar(
+            content: Text('A recipient must have either an email or a phone number. Please add one to continue',
+                style: Theme.of(context).textTheme.body1.merge(TextStyle(color: Colors.white)))
+          )
+        );
+        return;
+      }
       setState(() {
         _loading = true;
       });
@@ -73,6 +83,7 @@ class _AddRecipientDialogState extends State<AddRecipientDialog> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: _scaffoldKey,
       appBar: AppBar(
         title: Text('Add New Recipient')
       ),
