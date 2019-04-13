@@ -41,24 +41,35 @@ class HistoryScreenState extends State<HistoryScreen> {
   }
 
   void _loadItems() async {
-    String token = await _user.getIdToken();
-    String queryString = _queryString[_dropdownOptions.indexOf(_selectedOption)];
-    _listItems = await FirebaseBackend.getCheckIns(token, _quantity, _page, queryString);
-    if(!(_listItems is List) && _listItems.type != 'success') {
-      _error = true;
+    try {
+      String token = await _user.getIdToken();
+      String queryString = _queryString[_dropdownOptions.indexOf(
+          _selectedOption)];
+      _listItems =
+      await FirebaseBackend.getCheckIns(token, _quantity, _page, queryString)
+          .timeout(Duration(seconds: 7));
+      if (!(_listItems is List) && _listItems.type != 'success') {
+        _error = true;
+      }
+      BackendStatusResponse maxPageRes = await FirebaseBackend
+          .getCheckInsResultCount(token, queryString);
+      if (maxPageRes.type == 'success') {
+        double _doubleMaxPage = (maxPageRes.raw['resultCount'] / _quantity);
+        _maxPage = _doubleMaxPage.floor();
+        if (_doubleMaxPage.floor() == _doubleMaxPage.ceil()) _maxPage--;
+      }
+      else {
+        _error = true;
+      }
+      setState(() {
+        _loading = false;
+      });
+    } on TimeoutException catch(_) {
+      setState(() {
+        _loading = false;
+        _listItems = null;
+      });
     }
-    BackendStatusResponse maxPageRes = await FirebaseBackend.getCheckInsResultCount(token, queryString);
-    if(maxPageRes.type == 'success') {
-      double _doubleMaxPage = (maxPageRes.raw['resultCount'] / _quantity);
-      _maxPage = _doubleMaxPage.floor();
-      if(_doubleMaxPage.floor()==_doubleMaxPage.ceil()) _maxPage--;
-    }
-    else {
-      _error = true;
-    }
-    setState(() {
-      _loading = false;
-    });
   }
 
   void _nextPage() {
@@ -174,6 +185,26 @@ class HistoryScreenState extends State<HistoryScreen> {
             child: Center(child: CircularProgressIndicator()),
             padding: EdgeInsets.all(32.0),
           );
+        }
+        else if(!_loading && index == 1 && _listItems == null) {
+          return Container(
+            child: Column(
+              children: [
+                Text('We were unable to contact our servers. Please check your internet connection'),
+                RaisedButton(
+                  child: Text('Try Again'),
+                  onPressed: () {
+                    setState(() {
+                      _loading = true;
+                    });
+                  }
+                )
+              ]
+            )
+          );
+        }
+        else if(!_loading && index > 1 && _listItems == null) {
+          return Container();
         }
         else if(!_loading && index == 1) {
           return Container(
