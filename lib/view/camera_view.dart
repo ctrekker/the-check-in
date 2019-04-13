@@ -146,7 +146,10 @@ class _CameraExampleHomeState extends State<CameraExampleHome> {
   String timestamp() => DateTime.now().millisecondsSinceEpoch.toString();
 
   void showInSnackBar(String message) {
-    _scaffoldKey.currentState.showSnackBar(SnackBar(content: Text(message)));
+    _scaffoldKey.currentState.showSnackBar(
+      SnackBar(content: Text(message,
+          style: Theme.of(context).textTheme.body1.merge(TextStyle(color: Colors.white))))
+    );
   }
 
   void onNewCameraSelected(CameraDescription cameraDescription) async {

@@ -284,11 +284,17 @@ class _LandingScreenState extends State<LandingScreen> {
             if(res != null) {
               if(res.type == 'success') {
                 Scaffold.of(context).showSnackBar(
-                    SnackBar(content: Text(res.message)));
+                  SnackBar(content: Text(res.message,
+                      style: Theme.of(context).textTheme.body1.merge(TextStyle(color: Colors.white)))
+                  )
+                );
               }
               else if(res.type == 'warning') {
                 Scaffold.of(context).showSnackBar(
-                    SnackBar(content: Text(res.message)));
+                  SnackBar(content: Text(res.message,
+                      style: Theme.of(context).textTheme.body1.merge(TextStyle(color: Colors.white)))
+                  )
+                );
               }
             }
           }
@@ -309,11 +315,17 @@ class _LandingScreenState extends State<LandingScreen> {
             if(res != null) {
               if(res.type == 'success') {
                 Scaffold.of(context).showSnackBar(
-                    SnackBar(content: Text(res.message)));
+                  SnackBar(content: Text(res.message,
+                      style: Theme.of(context).textTheme.body1.merge(TextStyle(color: Colors.white)))
+                  )
+                );
               }
               else if(res.type == 'warning') {
                 Scaffold.of(context).showSnackBar(
-                    SnackBar(content: Text(res.message)));
+                  SnackBar(content: Text(res.message,
+                      style: Theme.of(context).textTheme.body1.merge(TextStyle(color: Colors.white)))
+                  )
+                );
               }
             }
           }
@@ -539,7 +551,13 @@ class _CheckInScreenState extends State<CheckInScreen> {
     List<int> recipients = _recipientWidget.state.getRecipients();
     if(recipients.length <= 0) {
       if(currentTimeMillis() - _lastSnackBarShow > 1500) {
-        scaffoldKey.currentState.showSnackBar(SnackBar(content: Text('Please select at least 1 recipient'), duration: Duration(milliseconds: 1500)));
+        scaffoldKey.currentState.showSnackBar(
+          SnackBar(
+            content: Text('Please select at least 1 recipient',
+                style: Theme.of(context).textTheme.body1.merge(TextStyle(color: Colors.white))),
+            duration: Duration(milliseconds: 1500)
+          )
+        );
         _lastSnackBarShow = currentTimeMillis();
       }
       return;
@@ -596,7 +614,11 @@ class _CheckInScreenState extends State<CheckInScreen> {
 
     bool close = true;
     if(response.type == 'error') {
-      scaffoldKey.currentState.showSnackBar(SnackBar(content: Text('There was an error checking in')));
+      scaffoldKey.currentState.showSnackBar(
+        SnackBar(content: Text('There was an error checking in',
+            style: Theme.of(context).textTheme.body1.merge(TextStyle(color: Colors.white)))
+        )
+      );
       close = false;
     }
 
@@ -675,7 +697,7 @@ class _CheckInScreenState extends State<CheckInScreen> {
               ),
               RaisedButton(
                 child: () {
-                  Widget _finishText = Text('Finish');
+                  Widget _finishText = Text('Check In');
                   if(!_loading) return _finishText;
                   else {
                     return Row(
@@ -755,7 +777,7 @@ class CheckInRequestScreenState extends State<CheckInRequestScreen> {
                   ),
                   RaisedButton(
                     child: () {
-                      Widget _finishText = Text('Finish');
+                      Widget _finishText = Text('Request Check In');
                       if(!_loading) return _finishText;
                       else {
                         return Row(
@@ -796,7 +818,13 @@ class CheckInRequestScreenState extends State<CheckInRequestScreen> {
     List<int> recipients = _recipientSelector.state.getRecipients();
     if(recipients.length <= 0) {
       if(currentTimeMillis() - _lastSnackBarShow > 1500) {
-        scaffoldKey.currentState.showSnackBar(SnackBar(content: Text('Please select at least 1 recipient'), duration: Duration(milliseconds: 1500)));
+        scaffoldKey.currentState.showSnackBar(
+          SnackBar(
+            content: Text('Please select at least 1 recipient',
+                style: Theme.of(context).textTheme.body1.merge(TextStyle(color: Colors.white))),
+            duration: Duration(milliseconds: 1500)
+          )
+        );
         _lastSnackBarShow = currentTimeMillis();
       }
       return;
@@ -816,7 +844,11 @@ class CheckInRequestScreenState extends State<CheckInRequestScreen> {
 
     bool close = true;
     if(response.type == 'error') {
-      scaffoldKey.currentState.showSnackBar(SnackBar(content: Text('There was an error checking in')));
+      scaffoldKey.currentState.showSnackBar(
+        SnackBar(content: Text('There was an error checking in',
+            style: Theme.of(context).textTheme.body1.merge(TextStyle(color: Colors.white)))
+        )
+      );
       print(response);
       close = false;
     }

@@ -51,13 +51,15 @@ class _UserScreenState extends State<UserScreen> with SingleTickerProviderStateM
       } catch(e) {}
       if(user != null && user.getIdToken() != null && user.uid == (await auth.currentUser()).uid) {
         _scaffoldKey.currentState.showSnackBar(
-            SnackBar(content: Text(user.uid))
+          SnackBar(content: Text(user.uid,
+              style: Theme.of(context).textTheme.body1.merge(TextStyle(color: Colors.white))))
         );
         Navigator.pop(context);
       }
       else {
         _scaffoldKey.currentState.showSnackBar(
-            SnackBar(content: Text('Your email or password is incorrect'))
+          SnackBar(content: Text('Your email or password is incorrect',
+              style: Theme.of(context).textTheme.body1.merge(TextStyle(color: Colors.white))))
         );
       }
       setState(() {
@@ -78,7 +80,8 @@ class _UserScreenState extends State<UserScreen> with SingleTickerProviderStateM
       if(status.type == 'success') {
         FirebaseUser user = await auth.signInWithEmailAndPassword(email: _email, password: _password);
         _scaffoldKey.currentState.showSnackBar(
-            SnackBar(content: Text('Successfully created account'))
+          SnackBar(content: Text('Successfully created account',
+              style: Theme.of(context).textTheme.body1.merge(TextStyle(color: Colors.white))))
         );
         Navigator.pop(context);
       }
@@ -151,7 +154,8 @@ class _UserScreenState extends State<UserScreen> with SingleTickerProviderStateM
                         Navigator.push(context, MaterialPageRoute(builder: (context) => ForgotPasswordScreen())).then((val) {
                           if(val == true) {
                             _scaffoldKey.currentState.showSnackBar(
-                                SnackBar(content: Text('A recovery email has been sent')));
+                              SnackBar(content: Text('A recovery email has been sent',
+                                  style: Theme.of(context).textTheme.body1.merge(TextStyle(color: Colors.white)))));
                           }
                         });
                       }
