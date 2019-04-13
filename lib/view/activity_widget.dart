@@ -101,29 +101,30 @@ class ActivityWidgetState extends State<ActivityWidget> {
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
           Container(
-            padding: EdgeInsets.only(top: 16.0),
-          ),
-          ListTile(
-            leading: Icon(icon),
-            title: Text(title),
-            subtitle: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(summary),
-                Text(date)
-              ]
+            padding: EdgeInsets.only(top: 10.0),
+            child: ListTile(
+              leading: Icon(icon),
+              title: Text(title),
+              subtitle: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+//                Text(summary),
+                    Text(date),
+                    ButtonTheme.bar( // make buttons use the appropriate styles for cards
+                      padding: EdgeInsets.only(left: 0.0, top: 0.0, right: 0.0, bottom: 0.0),
+                      child: ButtonBar(
+                        children: <Widget>[
+                          FlatButton(
+                            child: Text(actionText),
+                            onPressed: actionCallback,
+                          ),
+                        ],
+                      ),
+                    )
+                  ]
+              ),
             ),
-          ),
-          ButtonTheme.bar( // make buttons use the appropriate styles for cards
-            child: ButtonBar(
-              children: <Widget>[
-                FlatButton(
-                  child: Text(actionText),
-                  onPressed: actionCallback,
-                ),
-              ],
-            ),
-          ),
+          )
         ],
       )
     );
