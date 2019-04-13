@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:the_check_in/util/config.dart';
 import 'package:the_check_in/util/firebase_custom.dart';
 import 'package:the_check_in/util/spacer.dart' show SpacerBC;
 import 'package:map_view/map_view.dart';
@@ -54,8 +55,9 @@ class SettingsScreenState extends State<SettingsScreen> {
     return def;
   }
   void _updateSetting(String name, { dynamic value }) {
-    _user.getIdToken().then((token) {
-      FirebaseBackend.setSettings(token, settingValues);
+    _user.getIdToken().then((token) async {
+      await FirebaseBackend.setSettings(token, settingValues);
+      await FirebaseBackend.updateSettings(token);
     });
 
     setState(() {

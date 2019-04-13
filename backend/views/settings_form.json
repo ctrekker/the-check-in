@@ -10,6 +10,13 @@
           "name": "receive_emails",
           "label": "Receive emails from us",
           "default": true
+        },
+        {
+          "type": "select",
+          "name": "font_scale",
+          "label": "Font scale",
+          "values": [ "100%", "110%", "125%", "150%" ],
+          "default": "125%"
         }
       ]
     },

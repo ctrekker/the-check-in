@@ -146,7 +146,7 @@ class ActivityWidgetState extends State<ActivityWidget> {
             children: <Widget>[
               Text(
                 'Recent Activity',
-                style: TextStyle(fontSize: 20.0),
+                style: Theme.of(context).textTheme.title,
               ),
               IconButton(
                 icon: Icon(Icons.refresh),

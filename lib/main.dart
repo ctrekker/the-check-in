@@ -67,6 +67,9 @@ class _MyAppState extends State<MyApp> {
   bool _permission;
   String error;
   Location _location = new Location();
+
+  bool _updatedTheme = false;
+
   initPlatformState() async {
     Map<String, double> location;
     // Platform messages may fail, so we use a try/catch PlatformException.
@@ -96,32 +99,57 @@ class _MyAppState extends State<MyApp> {
     //if (!mounted) return;
 
   }
+  void _updateTheme() {
+    setState(() {
+      _updatedTheme = true;
+    });
+  }
   @override
   Widget build(BuildContext context) {
-    Widget checkInButton = RaisedButton(
-      child: Text('Check In'),
-      color: Colors.blue,
-      textColor: Colors.white,
-      onPressed: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => CheckInScreen()),
-        );
-      }
-    );
+    if(_updatedTheme) _updatedTheme = false;
+
+    double fontScale = 1.25;
+    if(Config.getSettings() != null && Config.getSettings().containsKey('font_scale')) {
+      fontScale = double.parse(Config.getSettings()['font_scale'].replaceAll(new RegExp(r'%'), '')) / 100.0;
+    }
+
+    dynamic textSize = {
+      'headline': 72.0,
+      'title': 20.0,
+      'subhead': 16.0,
+      'body1': 14.0,
+      'body2': 14.0,
+      'button': 14.0
+    };
+    textSize.forEach((key, value) {
+      textSize[key] = value * fontScale;
+    });
+
     return MaterialApp(
       title: 'The Check In',
       theme: new ThemeData(
         primarySwatch: Colors.blue,
-        dividerColor: Colors.grey
+        dividerColor: Colors.grey,
+        textTheme: TextTheme(
+          headline: TextStyle(fontSize: textSize['headline'], fontWeight: FontWeight.bold),
+          title: TextStyle(fontSize: textSize['title'], fontWeight: FontWeight.normal),
+          subhead: TextStyle(fontSize: textSize['subhead']),
+          body1: TextStyle(fontSize: textSize['body1']),
+          body2: TextStyle(fontSize: textSize['body2'], fontWeight: FontWeight.normal),
+          button: TextStyle(fontSize: textSize['button'])
+        ),
       ),
-      home: LandingScreen(),
+      home: LandingScreen(_updateTheme),
     );
   }
 }
 
 class LandingScreen extends StatefulWidget {
-  _LandingScreenState createState() => _LandingScreenState();
+  dynamic _themeUpdateCallback;
+  LandingScreen(_themeUpdateCallback) {
+    this._themeUpdateCallback = _themeUpdateCallback;
+  }
+  _LandingScreenState createState() => _LandingScreenState(_themeUpdateCallback);
 }
 class _LandingScreenState extends State<LandingScreen> {
   bool _first = true;
@@ -129,6 +157,11 @@ class _LandingScreenState extends State<LandingScreen> {
   bool _loggedIn = false;
   bool _offline = false;
   ActivityWidget activityWidget;
+  dynamic _themeUpdateCallback;
+
+  _LandingScreenState(_themeUpdateCallback) {
+    this._themeUpdateCallback = _themeUpdateCallback;
+  }
 
   Future<bool> _isConnected() async {
     try {
@@ -160,6 +193,10 @@ class _LandingScreenState extends State<LandingScreen> {
         String token = await fuser.getIdToken();
         print(token);
         FirebaseBackend.setTimezone(token, DateTime.now().timeZoneOffset.inHours.toString()+":"+DateTime.now().timeZoneName);
+        Config.settingsListeners.add((settings) {
+          _themeUpdateCallback();
+        });
+        await FirebaseBackend.updateSettings(token);
 
         FirebaseMessaging _firebaseMessaging = new FirebaseMessaging();
         _firebaseMessaging.configure(
