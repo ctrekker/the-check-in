@@ -10,11 +10,13 @@ class UserScreen extends StatefulWidget {
   @override
   State<StatefulWidget> createState() => _UserScreenState();
 }
-class _UserScreenState extends State<UserScreen> {
+class _UserScreenState extends State<UserScreen> with SingleTickerProviderStateMixin {
   final _scaffoldKey = GlobalKey<ScaffoldState>();
   final _siFormKey = GlobalKey<FormState>();
   final _suFormKey = GlobalKey<FormState>();
   final _minPasswordLength = 6;
+
+  TabController _tabController;
 
   String _name;
   String _email;
@@ -23,6 +25,12 @@ class _UserScreenState extends State<UserScreen> {
   String _passwordConfirm;
 
   bool _showLoader = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = new TabController(vsync: this, length: 2);
+  }
 
   bool _isEmail(String em) {
     String p = r'^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$';
@@ -95,6 +103,8 @@ class _UserScreenState extends State<UserScreen> {
 
   @override
   Widget build(BuildContext context) {
+    TextStyle linkTextStyle = TextStyle(color: Colors.blue);
+
     Widget _signInContainer = ListView(
       padding: EdgeInsets.all(32.0),
       children: [Form(
@@ -135,7 +145,7 @@ class _UserScreenState extends State<UserScreen> {
                 RichText(
                   text: TextSpan(
                     text: 'Forgot password?',
-                    style: Theme.of(context).textTheme.body1.merge(TextStyle(color: Colors.blue)),
+                    style: Theme.of(context).textTheme.body1.merge(linkTextStyle),
                     recognizer: TapGestureRecognizer()
                       ..onTap = () {
                         Navigator.push(context, MaterialPageRoute(builder: (context) => ForgotPasswordScreen())).then((val) {
@@ -148,16 +158,30 @@ class _UserScreenState extends State<UserScreen> {
                   )
                 ),
                 RaisedButton(
-                    child: Text('Log In'),
-                    onPressed: () {
-                      if(_siFormKey.currentState.validate()) {
-                        _siSubmit();
-                      }
+                  child: Text('Log In'),
+                  onPressed: () {
+                    if(_siFormKey.currentState.validate()) {
+                      _siSubmit();
                     }
+                  }
                 ),
               ]);
               return _c;
-            }())
+            }()),
+            ButtonBar(
+              children: [
+                RichText(
+                  text: TextSpan(
+                    text: 'Don\'t have an account?',
+                    style: Theme.of(context).textTheme.body1.merge(linkTextStyle),
+                    recognizer: TapGestureRecognizer()
+                      ..onTap = () {
+                        _tabController.animateTo(1);
+                      }
+                  )
+                )
+              ]
+            )
           ]
         )
       )]
@@ -239,33 +263,46 @@ class _UserScreenState extends State<UserScreen> {
                 ]);
                 return _c;
               }()
-            )
+            ),
+            ButtonBar(
+              children: [
+                RichText(
+                  text: TextSpan(
+                    text: 'Already have an account?',
+                    style: Theme.of(context).textTheme.body1.merge(linkTextStyle),
+                    recognizer: TapGestureRecognizer()
+                      ..onTap = () {
+                        _tabController.animateTo(0);
+                      }
+                  )
+                )
+              ]
+            ),
           ]
         )
       )]
     );
 
     TextStyle tabTextStyle = TextStyle(color: Colors.white);
-    return DefaultTabController(
-      length: 2,
-      child: Scaffold(
-        key: _scaffoldKey,
-        appBar: AppBar(
-          title: appTitle,
-          bottom: TabBar(
-            tabs: <Widget>[
-              Tab(child: Text('Log In', style: Theme.of(context).textTheme.body1.merge(tabTextStyle))),
-              Tab(child: Text('Create Account', style: Theme.of(context).textTheme.body1.merge(tabTextStyle)))
-            ]
-          ),
-          automaticallyImplyLeading: false,
-        ),
-        body: TabBarView(
-          children: <Widget>[
-            _signInContainer,
-            _signUpContainer,
+    return Scaffold(
+      key: _scaffoldKey,
+      appBar: AppBar(
+        title: appTitle,
+        bottom: TabBar(
+          controller: _tabController,
+          tabs: <Widget>[
+            Tab(child: Text('Log In', style: Theme.of(context).textTheme.body1.merge(tabTextStyle))),
+            Tab(child: Text('Create Account', style: Theme.of(context).textTheme.body1.merge(tabTextStyle)))
           ]
-        )
+        ),
+        automaticallyImplyLeading: false,
+      ),
+      body: TabBarView(
+        controller: _tabController,
+        children: <Widget>[
+          _signInContainer,
+          _signUpContainer,
+        ]
       )
     );
   }
