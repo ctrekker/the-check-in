@@ -41,6 +41,7 @@ class ActivityWidgetState extends State<ActivityWidget> {
     } on TimeoutException catch(_) {
       setState(() {
         _loading = false;
+        _silentReload = true;
         _activities = null;
       });
     }
