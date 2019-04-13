@@ -31,6 +31,8 @@ class ActivityDetailsScreenState extends State<ActivityDetailsScreen> {
     for(int i=0; i<message.length; i++) {
       dynamic elementData = message[i];
 
+      if(elementData.containsKey('type') && elementData['type'] == 'hidden') continue;
+
       if(elementData.containsKey('title')) {
         columnWidgets.add(Text(
           elementData['title'],

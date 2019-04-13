@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:firebase_auth/firebase_auth.dart' show FirebaseUser;
 import 'package:flutter/material.dart';
+import 'package:the_check_in/main.dart';
 import 'package:the_check_in/util/config.dart';
 import 'package:the_check_in/util/firebase_custom.dart';
 import 'dart:async';
@@ -12,15 +13,17 @@ import 'package:shared_preferences/shared_preferences.dart';
 class RecipientSelector extends StatefulWidget {
   FirebaseUser _user;
   dynamic _handleOffline;
+  dynamic _checkedOverride;
   RecipientSelectorState state;
-  RecipientSelector(_user, _handleOffline) {
+  RecipientSelector(_user, _handleOffline, [dynamic _checkedOverride]) {
     this._user = _user;
     this._handleOffline = _handleOffline;
+    this._checkedOverride = _checkedOverride;
   }
 
   @override
   State<StatefulWidget> createState() {
-    state = RecipientSelectorState(_user, _handleOffline);
+    state = RecipientSelectorState(_user, _handleOffline, _checkedOverride);
     return state;
   }
 }
@@ -28,6 +31,7 @@ class RecipientSelectorState extends State<RecipientSelector> {
   FirebaseUser _user;
 
   dynamic _checked = {};
+  bool _checkedOverride = false;
   String _checkedCacheKey = 'recipientsChecked';
   bool _offline = true;
   bool _checkRecipients = true;
@@ -36,9 +40,13 @@ class RecipientSelectorState extends State<RecipientSelector> {
   dynamic _handleOffline;
   Timer _handleOfflineTimer;
 
-  RecipientSelectorState(_user, _handleOffline) {
+  RecipientSelectorState(_user, _handleOffline, [_checkedOverride]) {
     this._user = _user;
     this._handleOffline = _handleOffline;
+    if(_checkedOverride != null) {
+      this._checkedOverride = true;
+      this._checked = _checkedOverride;
+    }
   }
 
   List<int> getRecipients() {
@@ -90,9 +98,12 @@ class RecipientSelectorState extends State<RecipientSelector> {
       _checkedCache = json.decode(prefs.getString(_checkedCacheKey));
     }
 
+    if(_user == null) {
+      _user = await auth.currentUser();
+    }
     _recipients = await FirebaseBackend.getAllRecipients(await _user.getIdToken());
     if(_recipients != null && !(_recipients is List) && _recipients['type'] == 'error') _recipients = null;
-    if(_recipients != null) {
+    if(_recipients != null && !_checkedOverride) {
       for (dynamic recipient in _recipients) {
         if (_checked[recipient['id'].toString()] == null) {
           if(_checkedCache != null && _checkedCache.keys.contains(recipient['id'].toString())) {

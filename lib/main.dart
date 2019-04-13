@@ -1,5 +1,7 @@
 library health_check.main;
 
+import 'dart:convert';
+
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -394,12 +396,19 @@ class _LandingScreenState extends State<LandingScreen> {
 }
 
 class CheckInScreen extends StatefulWidget {
-  _CheckInScreenState createState() => _CheckInScreenState();
+  dynamic activity;
+  CheckInScreen([dynamic activity]) {
+    this.activity = activity;
+  }
+  _CheckInScreenState createState() => _CheckInScreenState(activity);
 }
 class _CheckInScreenState extends State<CheckInScreen> {
+  FirebaseUser fuser;
+
   GlobalKey<ScaffoldState> scaffoldKey = GlobalKey();
   bool _offline = true;
   bool _loading = false;
+  bool _init = true;
 
   RatingWidget _ratingWidget = RatingWidget();
   CheckInAttachments _attachmentsWidget = CheckInAttachments();
@@ -411,6 +420,8 @@ class _CheckInScreenState extends State<CheckInScreen> {
   bool _locationPermission = false;
   Map<String, double> _currentLocation;
   bool _showLocationPermissionPopup = false;
+
+  dynamic activity;
 
   @override
   void initState() {
@@ -446,8 +457,41 @@ class _CheckInScreenState extends State<CheckInScreen> {
     }
   }
 
-  _CheckInScreenState() {
-    _recipientWidget = RecipientSelector(fuser, _handleOffline);
+  _CheckInScreenState([dynamic activity]) {
+    this.activity = activity;
+    _initAsync();
+  }
+  void _initAsync() async {
+    fuser = await auth.currentUser();
+    if(this.activity != null) {
+      dynamic checkedOverride = {};
+
+      dynamic userDetails;
+      dynamic message = json.decode(activity['message']);
+      for (int i = 0; i < message.length; i++) {
+        if (message[i]['title'] == 'user') {
+          userDetails = message[i]['value'];
+          break;
+        }
+      }
+
+      String token = await fuser.getIdToken();
+
+      List<dynamic> res = await FirebaseBackend.getAllRecipients(token);
+      for (int i = 0; i < res.length; i++) {
+        checkedOverride[res[i]['id'].toString()] =
+            res[i]['email'] == userDetails['email'];
+      }
+
+      _recipientWidget = RecipientSelector(fuser, _handleOffline, checkedOverride);
+    }
+    else {
+      _recipientWidget = RecipientSelector(fuser, _handleOffline);
+    }
+
+    setState(() {
+      _init = false;
+    });
   }
 
   int _lastSnackBarShow = currentTimeMillis();
@@ -533,6 +577,16 @@ class _CheckInScreenState extends State<CheckInScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if(_init) {
+      return Scaffold(
+        appBar: AppBar(
+          title: Text('Check In')
+        ),
+        body: Center(
+          child: CircularProgressIndicator(),
+        )
+      );
+    }
     if(_showLocationPermissionPopup && !_locationPermission) {
       _location.onLocationChanged().listen((Map<String, double> result) {
         setState(() {

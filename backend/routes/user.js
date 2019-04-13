@@ -354,6 +354,10 @@ router.post('/checkIn', function(req, res) {
         info.message = info.message || null;
         info.image_id = info.image_id || null;
         info.location = info.location || null;
+        info.user = {
+            name: decodedToken.name,
+            email: decodedToken.email
+        };
 
         // Init flags
         var flags;
@@ -857,6 +861,13 @@ function constructJsonMessage(info) {
         message.push({
             title: 'Location',
             location: location
+        });
+    }
+    if(info.user) {
+        message.push({
+            title: 'user',
+            value: info.user,
+            type: 'hidden'
         });
     }
 
