@@ -313,7 +313,8 @@ router.post('/activity/get', function(req, res) {
                             return;
                         }
                         for(var i=0; i<results.length; i++) {
-                            results[i]['date'] = standardDateFormat(results[i]['timestamp'], timezone);
+                            // results[i]['date'] = standardDateFormat(results[i]['timestamp'], timezone);
+                            results[i]['date'] = conciseDateFormat(results[i]['timestamp'], timezone);
                         }
                         res.json(responses.get('ACTIVITY_GET_SUCCESS', { activity: results }, null, decodedToken.uid, req));
                     });
@@ -942,6 +943,11 @@ function standardDateFormat(timestamp, timezone) {
     timezone = timezone || '0:UTC';
     timezone = timezone.split(':');
     return moment(timestamp).add({ hours: parseInt(timezone[0]) }).format('MMMM Do YYYY, h:mm a [(' + timezone[1] + ')]');
+}
+function conciseDateFormat(timestamp, timezone) {
+    timezone = timezone || '0:UTC';
+    timezone = timezone.split(':');
+    return moment(timestamp).add({ hours: parseInt(timezone[0]) }).format('M/D/YYYY h:mm a');
 }
 function standardTimeFormat(timestamp, timezone) {
     timezone = timezone || '0:UTC';
