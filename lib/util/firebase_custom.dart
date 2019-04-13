@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/src/widgets/icon_data.dart';
+import 'package:the_check_in/main.dart';
 import 'package:the_check_in/util/config.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -9,6 +10,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 import 'dart:convert';
 import 'dart:async';
+
+import 'package:the_check_in/view/activity_details_screen.dart';
 
 class FirebaseBackend {
   static final String baseUrl = Config.backendUrl;
@@ -81,7 +84,6 @@ class FirebaseBackend {
 
     http.StreamedResponse response = await client.send(request);
     String jsonStr = await response.stream.bytesToString();
-    print(jsonStr);
     return BackendStatusResponse.fromJSON(json.decode(jsonStr));
   }
   static Future<BackendStatusResponse> removeRecipient(String token, int id) async {
@@ -104,11 +106,11 @@ class FirebaseBackend {
     String jsonStr = await response.stream.bytesToString();
     return BackendStatusResponse.fromJSON(json.decode(jsonStr));
   }
-  static Future<BackendStatusResponse> checkIn(String token, dynamic info, List<int> recipients) async {
+  static Future<BackendStatusResponse> checkIn(String token, dynamic info, List<int> recipients, dynamic flags) async {
     http.Client client = new http.Client();
     http.Request request = new http.Request('POST', new Uri.http(baseUrl, '/user/checkIn'));
 
-    request.bodyFields = {'token': token, 'info': json.encode(info), 'recipients': recipients.join(',')};
+    request.bodyFields = {'token': token, 'info': json.encode(info), 'recipients': recipients.join(','), 'flags': json.encode(flags)};
 
     http.StreamedResponse response = await client.send(request);
     String jsonStr = await response.stream.bytesToString();
@@ -234,11 +236,97 @@ class FirebaseBackend {
   static IconData typeToIcon(String type) {
     switch(type) {
       case 'CHECKIN_R':
-        return Icons.access_time;
+        return Icons.check;
       case 'CHECKIN_S':
-        return Icons.access_time;
+        return Icons.check;
+      case 'CHECKIN_RR':
+        return Icons.people;
+      case 'CHECKIN_RS':
+        return Icons.people;
       default:
         return Icons.message;
+    }
+  }
+  static String typeToActionText(String type) {
+    switch(type) {
+      case 'CHECKIN_R':
+        return "VIEW DETAILS";
+      case 'CHECKIN_S':
+        return "VIEW DETAILS";
+      case 'CHECKIN_RR':
+        return "CHECK IN";
+      case 'CHECKIN_RS':
+        return "";
+      default:
+        return "";
+    }
+  }
+
+  static typeToActionCallback(context, dynamic activity) {
+    dynamic viewDetailsCallback = () {
+      Navigator.push(context, MaterialPageRoute(builder: (context) => ActivityDetailsScreen(activity['message'])));
+    };
+    dynamic checkInCallback = () async {
+      // Extract user details from activity
+      dynamic userDetails;
+      dynamic message = json.decode(activity['message']);
+      for(int i=0; i<message.length; i++) {
+        if(message[i]['title'] == 'user') {
+          userDetails = message[i]['value'];
+          break;
+        }
+      }
+      if(userDetails == null) {
+        print('ERROR: could not extract user details from activity message packet');
+        Navigator.push(context, MaterialPageRoute(builder: (context) => CheckInScreen()));
+        return;
+      }
+
+      FirebaseUser fuser = await auth.currentUser();
+      String token = await fuser.getIdToken();
+
+      int recipientId = -1;
+      Future<void> getRecipientId([int level = 0]) async {
+        if(level >= 2) return;
+        List<dynamic> res = await FirebaseBackend.getAllRecipients(token);
+
+        for (int i = 0; i < res.length; i++) {
+          if (res[i]['email'] == userDetails['email']) {
+            recipientId = res[i]['id'];
+          }
+        }
+        if (recipientId == -1) {
+          print('WARN: recipient associated with user details doesn\'t exist. Creating a new one...');
+          BackendStatusResponse res = await FirebaseBackend.addRecipient(token, userDetails);
+          if (res.type != 'success') {
+            print(res);
+            return;
+          }
+
+          await getRecipientId(level + 1);
+        }
+      }
+      await getRecipientId();
+
+      if(recipientId == -1) {
+        Navigator.push(context, MaterialPageRoute(builder: (context) => CheckInScreen()));
+        return;
+      }
+
+      Navigator.push(context, MaterialPageRoute(builder: (context) => CheckInScreen(activity)));
+    };
+    dynamic empty = () {};
+    switch(activity['type']) {
+      case 'CHECKIN_R':
+        return viewDetailsCallback;
+      case 'CHECKIN_S':
+        return viewDetailsCallback;
+      case 'CHECKIN_RR':
+        return checkInCallback;
+      case 'CHECKIN_RS':
+        return empty;
+      default:
+        return empty;
     }
   }
 }

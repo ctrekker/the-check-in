@@ -205,7 +205,7 @@ class HistoryScreenState extends State<HistoryScreen> {
           );
           if(_dropdownOptions.indexOf(_selectedOption) == 0) {
             return ListTile(
-              title: Text('You Checked In'),
+              title: Text('You checked in'),
               subtitle: Text(_listItems[listIndex]['checkin_time_parsed']),
               trailing: _goButton,
               onTap: _tapHandler,
@@ -213,10 +213,22 @@ class HistoryScreenState extends State<HistoryScreen> {
           }
           else if(_dropdownOptions.indexOf(_selectedOption) == 1) {
             return ListTile(
-              title: Text(_listItems[listIndex]['name']+' Checked In'),
+              title: Text(_listItems[listIndex]['name']+' checked in'),
               subtitle: Text(_listItems[listIndex]['checkin_time_parsed']),
               trailing: _goButton,
               onTap: _tapHandler
+            );
+          }
+          else if(_dropdownOptions.indexOf(_selectedOption) == 2) {
+            return ListTile(
+              title: Text('You requested a check in'),
+              subtitle: Text(_listItems[listIndex]['checkin_time_parsed'])
+            );
+          }
+          else if(_dropdownOptions.indexOf(_selectedOption) == 3) {
+            return ListTile(
+                title: Text(_listItems[listIndex]['name']+' requested a check in'),
+                subtitle: Text(_listItems[listIndex]['checkin_time_parsed'])
             );
           }
         }

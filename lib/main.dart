@@ -1,5 +1,7 @@
 library health_check.main;
 
+import 'dart:convert';
+
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -157,7 +159,7 @@ class _LandingScreenState extends State<LandingScreen> {
       if (fuser != null) {
         String token = await fuser.getIdToken();
         print(token);
-        FirebaseBackend.setTimezone(token, DateTime.now().timeZoneName);
+        FirebaseBackend.setTimezone(token, DateTime.now().timeZoneOffset.inHours.toString()+":"+DateTime.now().timeZoneName);
 
         FirebaseMessaging _firebaseMessaging = new FirebaseMessaging();
         _firebaseMessaging.configure(
@@ -256,6 +258,31 @@ class _LandingScreenState extends State<LandingScreen> {
         );
       }
     );
+    Widget checkInRequestButton = Builder(
+      builder: (BuildContext context) {
+        return RaisedButton(
+          child: Text('Request Check In'),
+          color: Colors.blue,
+          textColor: Colors.white,
+          onPressed: () async {
+            BackendStatusResponse res = await Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => CheckInRequestScreen()),
+            );
+            if(res != null) {
+              if(res.type == 'success') {
+                Scaffold.of(context).showSnackBar(
+                    SnackBar(content: Text(res.message)));
+              }
+              else if(res.type == 'warning') {
+                Scaffold.of(context).showSnackBar(
+                    SnackBar(content: Text(res.message)));
+              }
+            }
+          }
+        );
+      }
+    );
 
     if(!_showLoading) {
       activityWidget = ActivityWidget(fuser);
@@ -269,6 +296,7 @@ class _LandingScreenState extends State<LandingScreen> {
             if(_loggedIn) {
               return [
                 checkInButton,
+                checkInRequestButton,
                 activityWidget
               ];
             }
@@ -317,7 +345,7 @@ class _LandingScreenState extends State<LandingScreen> {
               ),
             ),
             ListTile(
-                leading: Icon(Icons.access_time),
+                leading: Icon(Icons.check),
                 title: Text('Check In'),
                 onTap: () {
                   _drawerTap(() {
@@ -335,7 +363,7 @@ class _LandingScreenState extends State<LandingScreen> {
                 }
             ),
             ListTile(
-              leading: Icon(Icons.access_alarms),
+              leading: Icon(Icons.history),
               title: Text('History'),
               onTap: () {
                 _drawerTap(() {
@@ -368,12 +396,19 @@ class _LandingScreenState extends State<LandingScreen> {
 }
 
 class CheckInScreen extends StatefulWidget {
-  _CheckInScreenState createState() => _CheckInScreenState();
+  dynamic activity;
+  CheckInScreen([dynamic activity]) {
+    this.activity = activity;
+  }
+  _CheckInScreenState createState() => _CheckInScreenState(activity);
 }
 class _CheckInScreenState extends State<CheckInScreen> {
+  FirebaseUser fuser;
+
   GlobalKey<ScaffoldState> scaffoldKey = GlobalKey();
   bool _offline = true;
   bool _loading = false;
+  bool _init = true;
 
   RatingWidget _ratingWidget = RatingWidget();
   CheckInAttachments _attachmentsWidget = CheckInAttachments();
@@ -385,6 +420,8 @@ class _CheckInScreenState extends State<CheckInScreen> {
   bool _locationPermission = false;
   Map<String, double> _currentLocation;
   bool _showLocationPermissionPopup = false;
+
+  dynamic activity;
 
   @override
   void initState() {
@@ -420,8 +457,41 @@ class _CheckInScreenState extends State<CheckInScreen> {
     }
   }
 
-  _CheckInScreenState() {
-    _recipientWidget = RecipientSelector(fuser, _handleOffline);
+  _CheckInScreenState([dynamic activity]) {
+    this.activity = activity;
+    _initAsync();
+  }
+  void _initAsync() async {
+    fuser = await auth.currentUser();
+    if(this.activity != null) {
+      dynamic checkedOverride = {};
+
+      dynamic userDetails;
+      dynamic message = json.decode(activity['message']);
+      for (int i = 0; i < message.length; i++) {
+        if (message[i]['title'] == 'user') {
+          userDetails = message[i]['value'];
+          break;
+        }
+      }
+
+      String token = await fuser.getIdToken();
+
+      List<dynamic> res = await FirebaseBackend.getAllRecipients(token);
+      for (int i = 0; i < res.length; i++) {
+        checkedOverride[res[i]['id'].toString()] =
+            res[i]['email'] == userDetails['email'];
+      }
+
+      _recipientWidget = RecipientSelector(fuser, _handleOffline, checkedOverride);
+    }
+    else {
+      _recipientWidget = RecipientSelector(fuser, _handleOffline);
+    }
+
+    setState(() {
+      _init = false;
+    });
   }
 
   int _lastSnackBarShow = currentTimeMillis();
@@ -484,7 +554,8 @@ class _CheckInScreenState extends State<CheckInScreen> {
     BackendStatusResponse response = await FirebaseBackend.checkIn(
       token,
       FirebaseBackend.constructCheckInInfo(message: message, imageId: uploadResponse == null || uploadResponse.type == 'error' ? null : uploadResponse.raw['image_id'], location: location),
-      recipients);
+      recipients,
+      {});
 
     bool close = true;
     if(response.type == 'error') {
@@ -506,6 +577,16 @@ class _CheckInScreenState extends State<CheckInScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if(_init) {
+      return Scaffold(
+        appBar: AppBar(
+          title: Text('Check In')
+        ),
+        body: Center(
+          child: CircularProgressIndicator(),
+        )
+      );
+    }
     if(_showLocationPermissionPopup && !_locationPermission) {
       _location.onLocationChanged().listen((Map<String, double> result) {
         setState(() {
@@ -590,6 +671,123 @@ class _CheckInScreenState extends State<CheckInScreen> {
         ])
       )
     );
+  }
+}
+class CheckInRequestScreen extends StatefulWidget {
+  @override
+  State<StatefulWidget> createState() => CheckInRequestScreenState();
+}
+class CheckInRequestScreenState extends State<CheckInRequestScreen> {
+  bool _offline = true;
+  bool _loading = false;
+  RecipientSelector _recipientSelector;
+  GlobalKey<ScaffoldState> scaffoldKey = GlobalKey();
+  int _lastSnackBarShow = currentTimeMillis();
+
+  void _handleOffline(isOffline) {
+    setState(() {
+      _offline = isOffline;
+    });
+  }
+
+  CheckInRequestScreenState() {
+    _recipientSelector = RecipientSelector(fuser, _handleOffline);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return new Scaffold(
+      key: scaffoldKey,
+      appBar: AppBar(
+        title: Text('Request a Check In')
+      ),
+      body: Container(
+        padding: EdgeInsets.all(32.0),
+        child: SingleChildScrollView(
+          child: Column(
+            children: <Widget>[
+              _recipientSelector,
+              Divider(),
+              ButtonBar(
+                children: <Widget>[
+                  RaisedButton(
+                    child: Text('Cancel'),
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                  ),
+                  RaisedButton(
+                    child: () {
+                      Widget _finishText = Text('Finish');
+                      if(!_loading) return _finishText;
+                      else {
+                        return Row(
+                          children: <Widget>[
+                            Container(
+                                child: SizedBox(
+                                  child: CircularProgressIndicator(
+                                      valueColor: new AlwaysStoppedAnimation<Color>(Colors.white)
+                                  ),
+                                  width: 22.0,
+                                  height: 22.0,
+                                ),
+                                padding: EdgeInsets.only(right: 16.0)
+                            ),
+                            _finishText
+                          ],
+                        );
+                      }
+                    }(),
+                    color: Colors.blue,
+                    textColor: Colors.white,
+                    onPressed: (_offline) ? null : () {
+                      _submitDetails((BackendStatusResponse r) {
+                        Navigator.pop(context, r);
+                      });
+                    },
+                  )
+                ],
+              )
+            ],
+          )
+        )
+      )
+    );
+  }
+
+  void _submitDetails(callback) async {
+    List<int> recipients = _recipientSelector.state.getRecipients();
+    if(recipients.length <= 0) {
+      if(currentTimeMillis() - _lastSnackBarShow > 1500) {
+        scaffoldKey.currentState.showSnackBar(SnackBar(content: Text('Please select at least 1 recipient'), duration: Duration(milliseconds: 1500)));
+        _lastSnackBarShow = currentTimeMillis();
+      }
+      return;
+    }
+
+    setState(() {
+      _loading = true;
+    });
+
+    String token = await fuser.getIdToken();
+
+    BackendStatusResponse response = await FirebaseBackend.checkIn(
+        token,
+        FirebaseBackend.constructCheckInInfo(),
+        recipients,
+        { "REQUEST_CHECKIN": true });
+
+    bool close = true;
+    if(response.type == 'error') {
+      scaffoldKey.currentState.showSnackBar(SnackBar(content: Text('There was an error checking in')));
+      print(response);
+      close = false;
+    }
+
+    setState(() {
+      _loading = false;
+      if(close) callback(response);
+    });
   }
 }
 class CheckInAttachments extends StatefulWidget {

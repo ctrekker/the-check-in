@@ -64,13 +64,20 @@ class ActivityWidgetState extends State<ActivityWidget> {
       ];
     }
     else {
+      /*
+      () {
+              Navigator.push(context, MaterialPageRoute(builder: (context) => ActivityDetailsScreen(_activities[i]['message'])));
+            }
+       */
       for (int i = 0; i < _activities.length; i++) {
         cardList.add(_buildActivityCard(
-            FirebaseBackend.typeToIcon(_activities[i]['type']),
-            _activities[i]['title'],
-            _activities[i]['summary'],
-            _activities[i]['date'],
-            _activities[i]['message']));
+          FirebaseBackend.typeToIcon(_activities[i]['type']),
+          _activities[i]['title'],
+          _activities[i]['summary'],
+          _activities[i]['date'],
+          _activities[i]['message'],
+          FirebaseBackend.typeToActionText(_activities[i]['type']),
+          FirebaseBackend.typeToActionCallback(context, _activities[i])));
       }
       if (cardList.length == 0) {
         cardList = [
@@ -87,7 +94,7 @@ class ActivityWidgetState extends State<ActivityWidget> {
       children: cardList,
     );
   }
-  Widget _buildActivityCard(IconData icon, String title, String summary, String date, dynamic message) {
+  Widget _buildActivityCard(IconData icon, String title, String summary, String date, dynamic message, String actionText, dynamic actionCallback) {
     return Card(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -110,10 +117,8 @@ class ActivityWidgetState extends State<ActivityWidget> {
             child: ButtonBar(
               children: <Widget>[
                 FlatButton(
-                  child: const Text('VIEW DETAILS'),
-                  onPressed: () {
-                    Navigator.push(context, MaterialPageRoute(builder: (context) => ActivityDetailsScreen(message)));
-                  },
+                  child: Text(actionText),
+                  onPressed: actionCallback,
                 ),
               ],
             ),

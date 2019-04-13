@@ -42,7 +42,8 @@ CREATE TABLE check_in
   image_id VARCHAR(32),
   location TEXT,
   recipients VARCHAR(128),
-  type VARCHAR(12)
+  type VARCHAR(12),
+  flag_request BOOLEAN NOT NULL DEFAULT FALSE
 );
 
 # TABLE others_check_in

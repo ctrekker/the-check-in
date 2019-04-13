@@ -330,89 +330,132 @@ router.post('/activity/get', function(req, res) {
 });
 
 router.post('/checkIn', function(req, res) {
-    if(!req.body.token||!req.body.info) {
+    if(!req.body.token||!req.body.recipients) {
         res.json(responses.get('AUTH_MISSING_ARGS', {}, null, null, req));
     }
     admin.auth().verifyIdToken(req.body.token).then(function(decodedToken) {
-        try {
-            var info = JSON.parse(req.body.info);
-            info.rating = parseFloat(info.rating || "-1");
-            info.message = info.message || null;
-            info.image_id = info.image_id || null;
-            info.location = info.location || null;
+        // Init recipients
+        var recipients = req.body.recipients.split(',');
 
-            var recipients = req.body.recipients.split(',');
-        } catch(err) {
-            res.json(responses.get('MALFORMED_ARGUMENT', {}, err, decodedToken.uid, req));
+        // Init info
+        var info;
+        if(req.body.info) {
+            try {
+                info = JSON.parse(req.body.info);
+            } catch (err) {
+                res.json(responses.get('MALFORMED_ARGUMENT', {}, err, decodedToken.uid, req));
+                return;
+            }
         }
+        else {
+            info = {};
+        }
+        info.rating = parseFloat(info.rating || "-1");
+        info.message = info.message || null;
+        info.image_id = info.image_id || null;
+        info.location = info.location || null;
+        info.user = {
+            name: decodedToken.name,
+            email: decodedToken.email
+        };
 
-        conn.execute(
-            'INSERT INTO check_in (uid, rating, message, image_id, location, recipients) VALUES (?, ?, ?, ?, ?, ?)',
-            [decodedToken.uid, info.rating, info.message, info.image_id, info.location, recipients.join(',')],
+        // Init flags
+        var flags;
+        if(req.body.flags) {
+            try {
+                flags = JSON.parse(req.body.flags);
+            } catch(err) {
+                res.json(responses.get('MALFORMED_ARGUMENT', {}, err, decodedToken.uid, req));
+                return;
+            }
+        }
+        // Defaults
+        else {
+            flags = {}
+        }
+        if(!flags.REQUEST_CHECKIN) flags.REQUEST_CHECKIN = false;
+
+        conn.execute('SELECT id FROM check_in ORDER BY id DESC LIMIT 1',
+            [],
             function(err, results, fields) {
-                if(err) {
-                    res.json(responses.get('GENERIC_DB_ERROR', {}, err, decodedToken.uid, req));
+                var checkinId = -1;
+                if (!err) {
+                    checkinId = results[0]['id'] + 1;
                 }
                 else {
-                    getRecipients(req.body.token, function(err, results) {
+                    res.json(responses.get('GENERIC_DB_ERROR', {}, err, decodedToken.uid, req));
+                    return;
+                }
+                conn.execute(
+                    'INSERT INTO check_in (id, uid, rating, message, image_id, location, recipients, flag_request) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+                    [checkinId, decodedToken.uid, info.rating, info.message, info.image_id, info.location, recipients.join(','), flags.REQUEST_CHECKIN],
+                    function(err, results, fields) {
                         if(err) {
-                            res.json(responses.get('RECIPIENT_GET_ERROR', {}, err, decodedToken.uid, req));
+                            res.json(responses.get('GENERIC_DB_ERROR', {}, err, decodedToken.uid, req));
                         }
                         else {
-                            info.location_image_url = info.location != null ? getMapForLocation(info.location) : null;
-                            var recipientEmails = [];
-                            var allEmails = [];
-                            var settingCallbacks = 0;
-                            var settingTarget = 0;
-                            for(var i=0; i<results.length; i++) {
-                                var currentEmail = results[i].email;
-                                for(var j=0; j<recipients.length; j++) {
-                                    if(results[i].id === parseInt(recipients[j]) && currentEmail != null) {
-                                        allEmails.push(currentEmail);
-                                        settingTarget++;
-                                        getSetting(decodedToken.uid, 'receive_emails', req, function(value, email) {
-                                            settingCallbacks++;
-                                            if(value !== false) {
-                                                recipientEmails.push(email);
-                                            }
-                                            if(settingCallbacks >= settingTarget) {
-                                                callback();
-                                            }
-                                        }, currentEmail);
+                            getRecipients(req.body.token, function(err, results) {
+                                if(err) {
+                                    res.json(responses.get('RECIPIENT_GET_ERROR', {}, err, decodedToken.uid, req));
+                                }
+                                else {
+                                    info.location_image_url = info.location != null ? getMapForLocation(info.location) : null;
+                                    var recipientEmails = [];
+                                    var allEmails = [];
+                                    var settingCallbacks = 0;
+                                    var settingTarget = 0;
 
-                                        break;
+                                    for (var i = 0; i < results.length; i++) {
+                                        var currentEmail = results[i].email;
+                                        for (var j = 0; j < recipients.length; j++) {
+                                            if (results[i].id === parseInt(recipients[j]) && currentEmail != null) {
+                                                allEmails.push(currentEmail);
+                                                settingTarget++;
+                                                getSetting(decodedToken.uid, 'receive_emails', req, function (value, email) {
+                                                    settingCallbacks++;
+                                                    if (value !== false) {
+                                                        recipientEmails.push(email);
+                                                    }
+                                                    if (settingCallbacks >= settingTarget) {
+                                                        callback();
+                                                    }
+                                                }, currentEmail);
+
+                                                break;
+                                            }
+                                        }
+                                    }
+
+                                    function callback() {
+                                        if (recipientEmails.length > 0) {
+                                            sendEmails(decodedToken.uid, recipientEmails, info, flags, req, function (err) {
+                                                if (err) {
+                                                    //responses.get('GENERIC_EMAIL_ERROR', {}, err, decodedToken.uid, req);
+                                                }
+                                            });
+                                        }
+                                        // conn.execute(
+                                        //     'SELECT LAST_INSERT_ID() AS checkinId',
+                                        //     [],
+                                        //     function (err, results, fields) {
+
+                                        sendPushNotifications(decodedToken.uid, allEmails, info, checkinId, flags.REQUEST_CHECKIN, function (err) {
+                                            if (err) {
+
+                                            }
+                                        });
+                                        // });
+
+                                        var custom = {};
+                                        if(flags.REQUEST_CHECKIN) {
+                                            custom.message = 'You have now requested a check in';
+                                        }
+                                        res.json(responses.get('CHECKIN_SUCCESS', custom, null, decodedToken.uid, req));
                                     }
                                 }
-                            }
-
-                            conn.execute(
-                                'SELECT LAST_INSERT_ID() AS checkinId',
-                                [],
-                                function(err, results, fields) {
-                                    var checkinId = -1;
-                                    if(!err) {
-                                        checkinId = results[0]['checkinId'];
-                                    }
-                                    sendPushNotifications(decodedToken.uid, allEmails, info, checkinId, function (err) {
-                                        if (err) {
-
-                                        }
-                                    });
-                                });
-
-                            function callback() {
-                                if (recipientEmails.length > 0) {
-                                    sendEmails(decodedToken.uid, recipientEmails, info, req, function (err) {
-                                        if (err) {
-                                            //responses.get('GENERIC_EMAIL_ERROR', {}, err, decodedToken.uid, req);
-                                        }
-                                    });
-                                }
-                                res.json(responses.get('CHECKIN_SUCCESS', {}, null, decodedToken.uid, req));
-                            }
+                            });
                         }
                     });
-                }
             });
     }).catch(function(err) {
         res.json(responses.get('AUTH_BAD_TOKEN', {}, err, null, req));
@@ -439,11 +482,14 @@ router.post('/checkIn/get', function(req, res) {
         }
 
         var query = req.body.query;
+        var flag_request;
         switch(query) {
             case 'your_checkins':
+            case 'your_checkin_requests':
+                flag_request = query !== 'your_checkins';
                 conn.execute(
-                    'SELECT checkin_time, rating, message, image_id, location, recipients FROM check_in WHERE uid=? ORDER BY checkin_time DESC LIMIT ?, ?',
-                    [decodedToken.uid, page*quantity, quantity],
+                    'SELECT checkin_time, rating, message, image_id, location, recipients FROM check_in WHERE uid=? AND flag_request=? ORDER BY checkin_time DESC LIMIT ?, ?',
+                    [decodedToken.uid, flag_request, page*quantity, quantity],
                     function(err, results, fields) {
                         if(err) {
                             res.json(responses.get('GENERIC_DB_ERROR', {}, err, decodedToken.uid, req));
@@ -461,9 +507,11 @@ router.post('/checkIn/get', function(req, res) {
                     });
                 break;
             case 'others_checkins':
+            case 'others_checkin_requests':
+                flag_request = query !== 'others_checkins';
                 conn.execute(
-                    'SELECT uid, checkin_time, rating, message, image_id, location, recipients FROM check_in WHERE id IN (SELECT checkin_id FROM check_in_others WHERE recipient_uid=?) ORDER BY checkin_time DESC LIMIT ?, ?',
-                    [decodedToken.uid, page*quantity, quantity],
+                    'SELECT uid, checkin_time, rating, message, image_id, location, recipients FROM check_in WHERE id IN (SELECT checkin_id FROM check_in_others WHERE recipient_uid=?) AND flag_request=? ORDER BY checkin_time DESC LIMIT ?, ?',
+                    [decodedToken.uid, flag_request, page*quantity, quantity],
                     function(err, results, fields) {
                         if(err) {
                             res.json(responses.get('GENERIC_DB_ERROR', {}, err, decodedToken.uid, req));
@@ -487,7 +535,6 @@ router.post('/checkIn/get', function(req, res) {
                             }
 
                             function complete() {
-                                console.log('Complete');
                                 res.json(results);
                             }
 
@@ -499,14 +546,11 @@ router.post('/checkIn/get', function(req, res) {
                                     results[index]['uid'] = undefined;
                                 });
                             }
+                            if(results.length === 0) {
+                                res.json([]);
+                            }
                         });
                     });
-                break;
-            case 'your_checkin_requests':
-                res.json([]);
-                break;
-            case 'others_checkin_requests':
-                res.json([]);
                 break;
         }
 
@@ -521,28 +565,27 @@ router.post('/checkIn/get/resultCount', function(req, res) {
     }
     admin.auth().verifyIdToken(req.body.token).then(function(decodedToken) {
         var query = req.body.query;
+        var flag_request;
         switch(query) {
             case 'your_checkins':
+            case 'your_checkin_requests':
+                flag_request = query !== 'your_checkins';
                 conn.execute(
-                    'SELECT COUNT(*) AS entryCount FROM check_in WHERE uid=?',
-                    [decodedToken.uid],
+                    'SELECT COUNT(*) AS entryCount FROM check_in WHERE uid=? AND flag_request=?',
+                    [decodedToken.uid, flag_request],
                     function(err, results, fields) {
                         res.json(responses.get('RESULT_COUNT_GET_SUCCESS', {resultCount: parseInt(results[0]['entryCount'])}, null, decodedToken.uid, req));
                     });
                 return;
             case 'others_checkins':
+            case 'others_checkin_requests':
+                flag_request = query !== 'others_checkins';
                 conn.execute(
-                    'SELECT COUNT(*) AS entryCount FROM check_in_others WHERE recipient_uid=?',
-                    [decodedToken.uid],
+                    'SELECT COUNT(*) AS entryCount FROM check_in_others WHERE recipient_uid=? AND (SELECT flag_request FROM check_in WHERE id=checkin_id)=?',
+                    [decodedToken.uid, flag_request],
                     function(err, results, fields) {
                         res.json(responses.get('RESULT_COUNT_GET_SUCCESS', {resultCount: parseInt(results[0]['entryCount'])}, null, decodedToken.uid, req));
                     });
-                return;
-            case 'your_checkin_requests':
-                res.json(responses.get('RESULT_COUNT_GET_SUCCESS', {resultCount: 0}, null, decodedToken.uid, req));
-                return;
-            case 'others_checkin_requests':
-                res.json(responses.get('RESULT_COUNT_GET_SUCCESS', {resultCount: 0}, null, decodedToken.uid, req));
                 return;
             default:
                 res.json(responses.get('MALFORMED_ARGUMENT', {}, null, decodedToken.uid, req));
@@ -635,10 +678,11 @@ function getAttribute(uid, attributeId, req, callback) {
             }
         });
 }
-function sendEmails(uid, emails, info, req, callback) {
+function sendEmails(uid, emails, info, flags, req, callback) {
+    var send_time = new Date().getTime();
     admin.auth().getUser(uid).then(function (user) {
         var location = info.location ? JSON.parse(info.location) : null;
-        var subject = user.displayName + ' has checked in';
+        var subject = user.displayName + (flags.REQUEST_CHECKIN ? ' sent a check in request' : ' checked in');
 
         var emailContent = '';
         emailContent += '<p>' + (info.rating === -1 ? 'No rating was given' : 'Rating: ' + info.rating + ' of 5 stars') + '</p>';
@@ -650,6 +694,7 @@ function sendEmails(uid, emails, info, req, callback) {
             }
             else {
                 var timezone = res.value || 'UTC';
+                var subject_email = subject + ' at ' + standardTimeFormat(send_time, timezone);
 
                 for(var i=0; i<emails.length; i++) {
                     var emailStr = emails[i];
@@ -660,15 +705,15 @@ function sendEmails(uid, emails, info, req, callback) {
                     Twig.renderFile('./views/email_template.twig', {
                         domain: global.domain,
                         cacheRoot: global.cacheBucketRoot,
-                        display_name: user.displayName,
+                        subject: subject,
                         message: info.message || undefined,
                         image_id: info.image_id || undefined,
                         location: info.location || undefined,
-                        location_latitude: location.latitude,
-                        location_longitude: location.longitude,
+                        location_latitude: location ? location.latitude : undefined,
+                        location_longitude: location ? location.longitude : undefined,
                         // date: dateFormat(new Date(), 'mmmm dS, yyyy'),
                         // time: dateFormat(new Date(), 'h:MM TT')
-                        date_time: moment().tz(timezone).format('MMMM Do YYYY, h:mm a [(' + timezone + ')]'),
+                        date_time: standardDateFormat(send_time, timezone),
                         email_encoded: new Buffer(emailStr).toString('base64')
                     }, function(err, html) {
                         if(err) {
@@ -678,7 +723,7 @@ function sendEmails(uid, emails, info, req, callback) {
                         email.sendMail({
                             from: 'burnscoding@gmail.com',
                             bcc: emailStr,
-                            subject: subject,
+                            subject: subject_email,
                             html: html
                         }, function(err, info) {
                             if(err) {
@@ -694,10 +739,10 @@ function sendEmails(uid, emails, info, req, callback) {
         });
     });
 }
-function sendPushNotifications(uid, emails, info, checkinId, callback) {
+function sendPushNotifications(uid, emails, info, checkinId, flag_request, callback) {
     admin.auth().getUser(uid).then(function(user) {
-        var title = user.displayName + ' has checked in';
-        var titleSelf = 'You have checked in';
+        var title = user.displayName + (flag_request ? ' sent a check in request' : ' checked in');
+        var titleSelf = flag_request ? 'You requested a check in' : 'You have checked in';
         var summary = getSummary(user.displayName);
         var summarySelf = getSummary('You');
         function getSummary(displayName) {
@@ -727,7 +772,7 @@ function sendPushNotifications(uid, emails, info, checkinId, callback) {
         // if(info.rating !== -1) message += '<p>Rating: ' + info.rating + ' stars</p>';
         var message = constructJsonMessage(info);
 
-        addActivity(user.uid, titleSelf, summarySelf, message, 'CHECKIN_S', function(err) {
+        addActivity(user.uid, titleSelf, summarySelf, message, flag_request ? 'CHECKIN_RS' : 'CHECKIN_S', function(err) {
             if(err) console.log(err);
         });
 
@@ -735,7 +780,7 @@ function sendPushNotifications(uid, emails, info, checkinId, callback) {
             var email = emails[email_id];
             admin.auth().getUserByEmail(email)
                 .then(function(user) {
-                    addActivity(user.uid, title, summary, message, 'CHECKIN_R', function(err) {
+                    addActivity(user.uid, title, summary, message, flag_request ? 'CHECKIN_RR' : 'CHECKIN_R', function(err) {
                         if(err) console.log(err);
                     });
                     if(checkinId !== -1) {
@@ -818,6 +863,13 @@ function constructJsonMessage(info) {
             location: location
         });
     }
+    if(info.user) {
+        message.push({
+            title: 'user',
+            value: info.user,
+            type: 'hidden'
+        });
+    }
 
     if(message.length < 1) {
         message.push({
@@ -887,8 +939,14 @@ function getMapForLocation(location) {
 }
 
 function standardDateFormat(timestamp, timezone) {
-    timezone = timezone || 'UTC';
-    return moment(timestamp).tz(timezone).format('MMMM Do YYYY, h:mm a [(' + timezone + ')]');
+    timezone = timezone || '0:UTC';
+    timezone = timezone.split(':');
+    return moment(timestamp).add({ hours: parseInt(timezone[0]) }).format('MMMM Do YYYY, h:mm a [(' + timezone[1] + ')]');
+}
+function standardTimeFormat(timestamp, timezone) {
+    timezone = timezone || '0:UTC';
+    timezone = timezone.split(':');
+    return moment(timestamp).add({ hours: parseInt(timezone[0]) }).format('h:mm a');
 }
 
 function shallowClone(obj) {
