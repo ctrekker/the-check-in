@@ -180,7 +180,7 @@ class RecipientSelectorState extends State<RecipientSelector> {
 //        crossAxisAlignment: CrossAxisAlignment.start,
         children: (){
           List<Widget> out = [
-            Text('Recipients', style: TextStyle(fontSize: 16.0))
+            Text('Recipients', style: Theme.of(context).textTheme.subhead)
           ];
           if(_checkRecipients || _loaderOverride) {
             out.add(Container(

@@ -164,6 +164,17 @@ class FirebaseBackend {
     String jsonStr = await response.stream.bytesToString();
     return BackendStatusResponse.fromJSON(json.decode(jsonStr));
   }
+  static Future<void> updateSettings(String token) async {
+    BackendStatusResponse settingsRes = await FirebaseBackend.getSettings(token);
+    if(settingsRes.type == 'success') {
+      if(settingsRes.raw['value'] == null) {
+        Config.setSettings({});
+      }
+      else {
+        Config.setSettings(json.decode(settingsRes.raw['value']));
+      }
+    }
+  }
   static Future<BackendStatusResponse> setTimezone(String token, String timeZoneName) async {
     http.Client client = new http.Client();
     http.Request request = new http.Request('POST', new Uri.http(baseUrl, '/user/attribute/timezone/set'));

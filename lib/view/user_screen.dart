@@ -135,7 +135,7 @@ class _UserScreenState extends State<UserScreen> {
                 RichText(
                   text: TextSpan(
                     text: 'Forgot password?',
-                    style: TextStyle(color: Colors.blue),
+                    style: Theme.of(context).textTheme.body1.merge(TextStyle(color: Colors.blue)),
                     recognizer: TapGestureRecognizer()
                       ..onTap = () {
                         Navigator.push(context, MaterialPageRoute(builder: (context) => ForgotPasswordScreen())).then((val) {
@@ -245,6 +245,7 @@ class _UserScreenState extends State<UserScreen> {
       )]
     );
 
+    TextStyle tabTextStyle = TextStyle(color: Colors.white);
     return DefaultTabController(
       length: 2,
       child: Scaffold(
@@ -253,8 +254,8 @@ class _UserScreenState extends State<UserScreen> {
           title: appTitle,
           bottom: TabBar(
             tabs: <Widget>[
-              Tab(text: 'Log In'),
-              Tab(text: 'Create Account')
+              Tab(child: Text('Log In', style: Theme.of(context).textTheme.body1.merge(tabTextStyle))),
+              Tab(child: Text('Create Account', style: Theme.of(context).textTheme.body1.merge(tabTextStyle)))
             ]
           ),
           automaticallyImplyLeading: false,
