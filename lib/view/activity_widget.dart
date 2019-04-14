@@ -15,6 +15,8 @@ class ActivityWidget extends StatefulWidget {
 }
 
 class ActivityWidgetState extends State<ActivityWidget> {
+  static dynamic updateCallback;
+
   FirebaseUser _user;
   bool _loading = true;
   bool _silentReload = false;
@@ -23,6 +25,13 @@ class ActivityWidgetState extends State<ActivityWidget> {
 
   ActivityWidgetState(FirebaseUser user) {
     _user = user;
+    updateCallback = this._updateCallback;
+  }
+
+  void _updateCallback() {
+    setState(() {
+      _loading = true;
+    });
   }
 
   void _loadActivities() async {
@@ -106,22 +115,29 @@ class ActivityWidgetState extends State<ActivityWidget> {
               leading: Icon(icon),
               title: Text(title),
               subtitle: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
 //                Text(summary),
-                    Text(date),
-                    ButtonTheme.bar( // make buttons use the appropriate styles for cards
-                      padding: EdgeInsets.only(left: 0.0, top: 0.0, right: 0.0, bottom: 0.0),
-                      child: ButtonBar(
-                        children: <Widget>[
-                          FlatButton(
-                            child: Text(actionText),
-                            onPressed: actionCallback,
-                          ),
-                        ],
-                      ),
-                    )
-                  ]
+                  Text(date),
+                  () {
+                    if(actionText != "") {
+                      return ButtonTheme.bar( // make buttons use the appropriate styles for cards
+                        padding: EdgeInsets.only(left: 0.0, top: 0.0, right: 0.0, bottom: 0.0),
+                        child: ButtonBar(
+                          children: <Widget>[
+                            FlatButton(
+                              child: Text(actionText),
+                              onPressed: actionCallback,
+                            ),
+                          ],
+                        ),
+                      );
+                    }
+                    else {
+                      return Container();
+                    }
+                  }()
+                ]
               ),
             ),
           )

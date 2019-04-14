@@ -88,6 +88,7 @@ DROP TABLE IF EXISTS activity;
 CREATE TABLE activity
 (
   id INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
+  checkin_id INT,
   uid VARCHAR(36) NOT NULL,
   title VARCHAR(64),
   summary VARCHAR(256),

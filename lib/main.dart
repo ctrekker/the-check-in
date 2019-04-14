@@ -606,10 +606,21 @@ class _CheckInScreenState extends State<CheckInScreen> {
       await img.delete();
     }
 
+    int associatedWith = -1;
+    if(this.activity != null) {
+      dynamic activityMessage = json.decode(activity['message']);
+      for (int i = 0; i < activityMessage.length; i++) {
+        if (activityMessage[i]['title'] == 'checkinId') {
+          associatedWith = activityMessage[i]['value'];
+          break;
+        }
+      }
+    }
     BackendStatusResponse response = await FirebaseBackend.checkIn(
       token,
       FirebaseBackend.constructCheckInInfo(message: message, imageId: uploadResponse == null || uploadResponse.type == 'error' ? null : uploadResponse.raw['image_id'], location: location),
       recipients,
+      associatedWith,
       {});
 
     bool close = true;
@@ -624,7 +635,10 @@ class _CheckInScreenState extends State<CheckInScreen> {
 
     setState(() {
       _loading = false;
-      if(close) callback(response);
+      if(close) {
+        ActivityWidgetState.updateCallback();
+        callback(response);
+      }
     });
   }
 
@@ -840,6 +854,7 @@ class CheckInRequestScreenState extends State<CheckInRequestScreen> {
         token,
         FirebaseBackend.constructCheckInInfo(),
         recipients,
+        -1,
         { "REQUEST_CHECKIN": true });
 
     bool close = true;
@@ -855,7 +870,10 @@ class CheckInRequestScreenState extends State<CheckInRequestScreen> {
 
     setState(() {
       _loading = false;
-      if(close) callback(response);
+      if(close) {
+        ActivityWidgetState.updateCallback();
+        callback(response);
+      }
     });
   }
 }
