@@ -106,11 +106,11 @@ class FirebaseBackend {
     String jsonStr = await response.stream.bytesToString();
     return BackendStatusResponse.fromJSON(json.decode(jsonStr));
   }
-  static Future<BackendStatusResponse> checkIn(String token, dynamic info, List<int> recipients, dynamic flags) async {
+  static Future<BackendStatusResponse> checkIn(String token, dynamic info, List<int> recipients, int associatedWith, dynamic flags) async {
     http.Client client = new http.Client();
     http.Request request = new http.Request('POST', new Uri.http(baseUrl, '/user/checkIn'));
 
-    request.bodyFields = {'token': token, 'info': json.encode(info), 'recipients': recipients.join(','), 'flags': json.encode(flags)};
+    request.bodyFields = {'token': token, 'info': json.encode(info), 'recipients': recipients.join(','), 'associatedWith': associatedWith.toString(), 'flags': json.encode(flags)};
 
     http.StreamedResponse response = await client.send(request);
     String jsonStr = await response.stream.bytesToString();
@@ -254,6 +254,8 @@ class FirebaseBackend {
         return Icons.people;
       case 'CHECKIN_RS':
         return Icons.people;
+      case 'CHECKIN_RR_R':
+        return Icons.people;
       default:
         return Icons.message;
     }
@@ -268,11 +270,12 @@ class FirebaseBackend {
         return "CHECK IN";
       case 'CHECKIN_RS':
         return "";
+      case 'CHECKIN_RR_R':
+        return "CHECKED IN";
       default:
         return "";
     }
   }
-
   static typeToActionCallback(context, dynamic activity) {
     dynamic viewDetailsCallback = () {
       Navigator.push(context, MaterialPageRoute(builder: (context) => ActivityDetailsScreen(activity['message'])));
@@ -336,6 +339,8 @@ class FirebaseBackend {
         return checkInCallback;
       case 'CHECKIN_RS':
         return empty;
+      case 'CHECKIN_RR_R':
+        return null;
       default:
         return empty;
     }

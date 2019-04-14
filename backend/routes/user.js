@@ -376,12 +376,26 @@ router.post('/checkIn', function(req, res) {
         }
         if(!flags.REQUEST_CHECKIN) flags.REQUEST_CHECKIN = false;
 
+        var associatedWith;
+        if(req.body.associatedWith) {
+            try {
+                associatedWith = parseInt(req.body.associatedWith);
+            } catch(err) {
+                res.json(responses.get('MALFORMED_ARGUMENT', {}, err, decodedToken.uid, req));
+                return;
+            }
+        }
+        else {
+            associatedWith = -1;
+        }
+
         conn.execute('SELECT id FROM check_in ORDER BY id DESC LIMIT 1',
             [],
             function(err, results, fields) {
                 var checkinId = -1;
                 if (!err) {
                     checkinId = results[0]['id'] + 1;
+                    info.checkinId = checkinId;
                 }
                 else {
                     res.json(responses.get('GENERIC_DB_ERROR', {}, err, decodedToken.uid, req));
@@ -395,6 +409,39 @@ router.post('/checkIn', function(req, res) {
                             res.json(responses.get('GENERIC_DB_ERROR', {}, err, decodedToken.uid, req));
                         }
                         else {
+                            if(associatedWith !== -1) {
+                                conn.execute(
+                                    'SELECT uid, recipients FROM check_in WHERE id=?',
+                                    [associatedWith],
+                                    function(err, results, fields) {
+                                        if(err || results.length === 0) {
+                                            return;
+                                        }
+                                        admin.auth().getUser(decodedToken.uid).then(function(user) {
+                                            var splitRecipients = results[0]['recipients'].split(',');
+                                            getRecipients(results[0]['uid'], function(err, results) {
+                                                for(var i=0; i<results.length; i++) {
+                                                    if(splitRecipients.indexOf(results[i]['id'].toString()) !== -1 && results[i]['email'] === user.email) {
+                                                        associationValid();
+                                                        break;
+                                                    }
+                                                }
+                                            }, true, true);
+
+                                            function associationValid() {
+                                                conn.execute(
+                                                    "UPDATE activity SET type=? WHERE uid=? AND checkin_id=? AND type='CHECKIN_RR'",
+                                                    ['CHECKIN_RR_R', decodedToken.uid, associatedWith],
+                                                    function(err, results, fields) {
+                                                        // Everything is complete
+                                                    });
+                                            }
+                                        }).catch(function(err) {
+
+                                        });
+                                    });
+                            }
+
                             getRecipients(req.body.token, function(err, results) {
                                 if(err) {
                                     res.json(responses.get('RECIPIENT_GET_ERROR', {}, err, decodedToken.uid, req));
@@ -634,11 +681,15 @@ router.post('/image/upload', function(req, res) {
     });
 });
 
-function getRecipients(token, callback) {
-    admin.auth().verifyIdToken(token).then(function(decodedToken) {
+function getRecipients(token, callback, isUid, showDeleted) {
+    isUid = isUid || false;
+    showDeleted = showDeleted || false;
+    function after(uid) {
         conn.execute(
-            'SELECT id,name,uid,email,phone_number FROM recipients WHERE owner = ? AND deleted != TRUE',
-            [decodedToken.uid],
+            showDeleted ?
+                'SELECT id,name,uid,email,phone_number FROM recipients WHERE owner = ?' :
+                'SELECT id,name,uid,email,phone_number FROM recipients WHERE owner = ? AND deleted != TRUE',
+            [uid],
             function(err, results, fields) {
                 if(err) {
                     callback(err, 'GENERIC_DB_ERROR');
@@ -647,9 +698,17 @@ function getRecipients(token, callback) {
                     callback(undefined, results);
                 }
             });
-    }).catch(function(err) {
-        callback('AUTH_BAD_TOKEN', err);
-    });
+    }
+    if(!isUid) {
+        admin.auth().verifyIdToken(token).then(function(decodedToken) {
+            after(decodedToken.uid);
+        }).catch(function(err) {
+            callback('AUTH_BAD_TOKEN', err);
+        });
+    }
+    else {
+        after(token);
+    }
 }
 function getSetting(uid, name, req, callback, mutables) {
     getAttribute(uid, 'settings', req, function(err, res) {
@@ -773,7 +832,7 @@ function sendPushNotifications(uid, emails, info, checkinId, flag_request, callb
         // if(info.rating !== -1) message += '<p>Rating: ' + info.rating + ' stars</p>';
         var message = constructJsonMessage(info);
 
-        addActivity(user.uid, titleSelf, summarySelf, message, flag_request ? 'CHECKIN_RS' : 'CHECKIN_S', function(err) {
+        addActivity(user.uid, info.checkinId, titleSelf, summarySelf, message, flag_request ? 'CHECKIN_RS' : 'CHECKIN_S', function(err) {
             if(err) console.log(err);
         });
 
@@ -781,7 +840,7 @@ function sendPushNotifications(uid, emails, info, checkinId, flag_request, callb
             var email = emails[email_id];
             admin.auth().getUserByEmail(email)
                 .then(function(user) {
-                    addActivity(user.uid, title, summary, message, flag_request ? 'CHECKIN_RR' : 'CHECKIN_R', function(err) {
+                    addActivity(user.uid, info.checkinId, title, summary, message, flag_request ? 'CHECKIN_RR' : 'CHECKIN_R', function(err) {
                         if(err) console.log(err);
                     });
                     if(checkinId !== -1) {
@@ -830,10 +889,10 @@ function sendPushNotifications(uid, emails, info, checkinId, flag_request, callb
         }
     });
 }
-function addActivity(uid, title, summary, message, type, callback) {
+function addActivity(uid, checkinId, title, summary, message, type, callback) {
     conn.execute(
-        'INSERT INTO activity (uid, title, summary, message, type) VALUES (?, ?, ?, ?, ?)',
-        [uid, title, summary, message, type],
+        'INSERT INTO activity (uid, checkin_id, title, summary, message, type) VALUES (?, ?, ?, ?, ?, ?)',
+        [uid, checkinId, title, summary, message, type],
         function(err, results, fields) {
             if(err) {
                 callback(err);
@@ -863,6 +922,13 @@ function constructJsonMessage(info) {
             title: 'Location',
             location: location
         });
+    }
+    if(info.checkinId) {
+        message.push({
+            title: 'checkinId',
+            value: info.checkinId,
+            type: 'hidden'
+        })
     }
     if(info.user) {
         message.push({
