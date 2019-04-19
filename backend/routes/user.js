@@ -459,15 +459,39 @@ router.post('/checkIn', function(req, res) {
                                             if (results[i].id === parseInt(recipients[j]) && currentEmail != null) {
                                                 allEmails.push(currentEmail);
                                                 settingTarget++;
-                                                getSetting(decodedToken.uid, 'receive_emails', req, function (value, email) {
-                                                    settingCallbacks++;
-                                                    if (value !== false) {
-                                                        recipientEmails.push(email);
-                                                    }
-                                                    if (settingCallbacks >= settingTarget) {
-                                                        callback();
-                                                    }
-                                                }, currentEmail);
+
+                                                checkEmail(currentEmail);
+                                                function checkEmail(currentEmail) {
+                                                    conn.execute(
+                                                        'SELECT id FROM email_blacklist WHERE email=?',
+                                                        [currentEmail],
+                                                        function(err, results, fields) {
+                                                            if(!err && results.length === 0) {
+                                                                admin.auth().getUserByEmail(currentEmail).then(function (user) {
+                                                                    getSetting(user.uid, 'receive_emails', req, function (value, email) {
+                                                                        settingCallbacks++;
+                                                                        if (value !== false) {
+                                                                            recipientEmails.push(email);
+                                                                        }
+                                                                        if (settingCallbacks >= settingTarget) {
+                                                                            callback();
+                                                                        }
+                                                                    }, currentEmail);
+                                                                }).catch(function (err) {
+                                                                    settingCallbacks++;
+                                                                    if (settingCallbacks >= settingTarget) {
+                                                                        callback();
+                                                                    }
+                                                                });
+                                                            }
+                                                            else {
+                                                                settingCallbacks++;
+                                                                if(settingCallbacks >= settingTarget) {
+                                                                    callback();
+                                                                }
+                                                            }
+                                                        });
+                                                }
 
                                                 break;
                                             }
