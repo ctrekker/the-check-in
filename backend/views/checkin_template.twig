@@ -29,14 +29,14 @@
                     <h4 style="margin:5px">Get the app!</h4>
                     <img style="width:100%" src="{{ domain }}/google-play-badge.png"/>
                     <div style="padding:13px;margin-top:-12px"><img style="width:100%" src="{{ domain }}/app-store-badge.png"/></div>
-                    <p style="margin:5px;margin-top:0;color:grey;font-size:12px">The Check In app provides a convenient way to receive checkins like this one</p>
+                    <p style="margin:5px;margin-top:0;color:grey;font-size:12px">The Check In app provides a convenient way to receive check-ins like this one</p>
                 </div>
             </td>
         </tr>
         <tr>
             <td colspan="2" style="width:66%;padding-left:20px;padding-right:20px">
                 <h3 style="margin:5px;margin-top:15px">Location</h3>
-                {% if location is defined %}<a href="http://maps.google.com/maps?&z=10&q={{ location_latitude }}+{{ location_longitude }}&ll={{ location_latitude }}+{{ location_longitude }}"><img style="margin:5px;width:100%;box-shadow: 0 3px 6px 0 #a7a7a7" src="{{ cacheRoot }}/maps/{{ location_latitude }},{{ location_longitude }}.png"/>{% endif %}
+                {% if location is defined %}<a href="http://maps.google.com/maps?&z=10&q={{ location_latitude }}+{{ location_longitude }}&ll={{ location_latitude }}+{{ location_longitude }}"><img style="margin:5px;width:100%;box-shadow: 0 3px 6px 0 #a7a7a7" src="{{ cacheRoot }}/maps/{{ location_latitude }},{{ location_longitude }}.png"/></a>{% endif %}
                 {% if location is not defined %}<p style="margin:5px">No location data was sent</p>{% endif %}
             </td>
         </tr>

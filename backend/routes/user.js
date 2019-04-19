@@ -762,9 +762,10 @@ function sendEmails(uid, emails, info, flags, req, callback) {
                 }
 
                 function sendEmail(emailStr) {
-                    Twig.renderFile('./views/email_template.twig', {
+                    Twig.renderFile(flags.REQUEST_CHECKIN ? './views/request_checkin_template.twig' : './views/checkin_template.twig', {
                         domain: global.domain,
                         cacheRoot: global.cacheBucketRoot,
+                        sender: user.displayName,
                         subject: subject,
                         message: info.message || undefined,
                         image_id: info.image_id || undefined,
