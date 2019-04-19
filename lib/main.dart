@@ -33,8 +33,22 @@ void main() {
   Config.init();
 
   Maps.MapView.setApiKey(Config.mapsApiKey);
+
   runApp(new MyApp());
   cameraInit();
+}
+
+class AppStateListener with WidgetsBindingObserver {
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) async {
+    print(state);
+    if(state == AppLifecycleState.paused && fuser != null) {
+      FirebaseBackend.setActivityViewed(await fuser.getIdToken());
+    }
+    if(state == AppLifecycleState.resumed && fuser != null) {
+      ActivityWidgetState.updateCallback();
+    }
+  }
 }
 
 int currentTimeMillis() {
@@ -49,6 +63,7 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(AppStateListener());
 
     //initPlatformState();
 
@@ -636,7 +651,7 @@ class _CheckInScreenState extends State<CheckInScreen> {
     setState(() {
       _loading = false;
       if(close) {
-        ActivityWidgetState.updateCallback();
+        Timer(Duration(milliseconds: 500), () => ActivityWidgetState.updateCallback());
         callback(response);
       }
     });
@@ -871,7 +886,7 @@ class CheckInRequestScreenState extends State<CheckInRequestScreen> {
     setState(() {
       _loading = false;
       if(close) {
-        ActivityWidgetState.updateCallback();
+        Timer(Duration(milliseconds: 500), () => ActivityWidgetState.updateCallback());
         callback(response);
       }
     });

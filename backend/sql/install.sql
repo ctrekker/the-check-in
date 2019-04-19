@@ -94,7 +94,8 @@ CREATE TABLE activity
   summary VARCHAR(256),
   message TEXT,
   type VARCHAR(12),
-  send_timestamp TIMESTAMP DEFAULT NOW()
+  send_timestamp TIMESTAMP DEFAULT NOW(),
+  viewed BOOLEAN NOT NULL DEFAULT FALSE
 );
 
 DROP TABLE IF EXISTS feedback;

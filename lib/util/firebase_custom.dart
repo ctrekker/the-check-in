@@ -106,6 +106,16 @@ class FirebaseBackend {
     String jsonStr = await response.stream.bytesToString();
     return BackendStatusResponse.fromJSON(json.decode(jsonStr));
   }
+  static Future<void> setActivityViewed(String token) async {
+    http.Client client = new http.Client();
+    http.Request request = new http.Request('POST', new Uri.http(baseUrl, '/user/activity/set/viewed'));
+
+    request.bodyFields = {'token': token};
+
+    http.StreamedResponse response = await client.send(request);
+    String jsonStr = await response.stream.bytesToString();
+    return BackendStatusResponse.fromJSON(json.decode(jsonStr));
+  }
   static Future<BackendStatusResponse> checkIn(String token, dynamic info, List<int> recipients, int associatedWith, dynamic flags) async {
     http.Client client = new http.Client();
     http.Request request = new http.Request('POST', new Uri.http(baseUrl, '/user/checkIn'));
