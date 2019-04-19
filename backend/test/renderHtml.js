@@ -1,6 +1,6 @@
 var Twig = require('twig');
 
-Twig.renderFile('./views/email_template.twig', {
+Twig.renderFile('./views/checkin_template.twig', {
     display_name: 'Connor',
     message: 'Another test message',
     image_id: 'V52U3gNQB19WLnUGKqrfkieTV1lrnwYi',
