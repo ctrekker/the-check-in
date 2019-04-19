@@ -305,7 +305,7 @@ router.post('/activity/get', function(req, res) {
             getAttribute(decodedToken.uid, 'timezone', req, function(err, response) {
                 var timezone = response.value || 'UTC';
                 conn.execute(
-                    'SELECT title, summary, message, type, send_timestamp as `timestamp` FROM activity WHERE uid=? ORDER BY send_timestamp DESC LIMIT ?',
+                    'SELECT title, summary, message, type, send_timestamp as `timestamp`, viewed FROM activity WHERE uid=? ORDER BY send_timestamp DESC LIMIT ?',
                     [decodedToken.uid, parseInt(value)],
                     function(err, results, fields) {
                         if(err) {
@@ -326,6 +326,31 @@ router.post('/activity/get', function(req, res) {
         }
         catch(e) {
             console.log('WARN: error within /activity/get auth catch block');
+        }
+    });
+});
+router.post('/activity/set/viewed', function(req, res) {
+    if(!req.body.token) {
+        res.json(responses.get('AUTH_MISSING_ARGS', {}, null, null, req));
+        return;
+    }
+    admin.auth().verifyIdToken(req.body.token).then(function(decodedToken) {
+        conn.execute(
+            'UPDATE activity SET viewed=TRUE WHERE uid=? AND viewed=FALSE',
+            [decodedToken.uid],
+            function(err, results, fields) {
+                if(err) {
+                    res.json(responses.get('GENERIC_DB_ERROR', {}, err, decodedToken.uid, req));
+                    return;
+                }
+                res.json(responses.get('ACTIVITY_SET_VIEWED_SUCCESS', {}, null, decodedToken.uid, req));
+            });
+    }).catch(function(err) {
+        try {
+            res.json(responses.get('AUTH_BAD_TOKEN', {}, err, null, req));
+        }
+        catch(e) {
+            console.log('WARN: error within /activity/set/viewed auth catch block');
         }
     });
 });

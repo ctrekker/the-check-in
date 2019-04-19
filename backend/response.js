@@ -108,6 +108,10 @@ var responses = {
         type: 'success',
         code: 'activity/get-success'
     },
+    ACTIVITY_SET_VIEWED_SUCCESS: {
+        type: 'success',
+        code: 'activity/set-viewed-success'
+    },
     UPLOAD_SUCCESS: {
         type: 'success',
         code: 'upload/success'

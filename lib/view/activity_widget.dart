@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:the_check_in/util/firebase_custom.dart';
+import 'package:the_check_in/util/text_divider.dart';
 import 'package:the_check_in/view/activity_details_screen.dart';
 
 class ActivityWidget extends StatefulWidget {
@@ -79,13 +80,26 @@ class ActivityWidgetState extends State<ActivityWidget> {
               Navigator.push(context, MaterialPageRoute(builder: (context) => ActivityDetailsScreen(_activities[i]['message'])));
             }
        */
+      bool newTag = false;
+      bool olderTag = false;
       for (int i = 0; i < _activities.length; i++) {
+        if(!newTag && _activities[i]['viewed'] == 0) {
+          cardList.add(TextDivider(text: "New"));
+
+          newTag = true;
+        }
+        if(!olderTag && _activities[i]['viewed'] == 1) {
+          cardList.add(TextDivider(text: "Older"));
+
+          olderTag = true;
+        }
         cardList.add(_buildActivityCard(
           FirebaseBackend.typeToIcon(_activities[i]['type']),
           _activities[i]['title'],
           _activities[i]['summary'],
           _activities[i]['date'],
           _activities[i]['message'],
+          _activities[i]['viewed'],
           FirebaseBackend.typeToActionText(_activities[i]['type']),
           FirebaseBackend.typeToActionCallback(context, _activities[i])));
       }
@@ -104,8 +118,9 @@ class ActivityWidgetState extends State<ActivityWidget> {
       children: cardList,
     );
   }
-  Widget _buildActivityCard(IconData icon, String title, String summary, String date, dynamic message, String actionText, dynamic actionCallback) {
+  Widget _buildActivityCard(IconData icon, String title, String summary, String date, dynamic message, int viewed, String actionText, dynamic actionCallback) {
     return Card(
+      color: viewed == 0 ? Color.fromARGB(175, 255, 255, 255) : Colors.white,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
