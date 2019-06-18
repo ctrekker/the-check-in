@@ -14,5 +14,6 @@
   "gmaps": {
     "key": "<GOOGLE-MAPS-STATIC-KEY>"
   },
-  "domain": "localhost"
+  "domain": "localhost",
+  "env": "development"
 }
