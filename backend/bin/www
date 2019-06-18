@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 var app = require('../app');
+var config = require('../config.json');
 var debug = require('debug')('backend:server');
 var http = require('http');
 var https = require('https');
@@ -15,7 +16,7 @@ server.listen(httpPort, () => {
 });
 
 var readPEM = function(name) {
-    return fs.readFileSync('/etc/letsencrypt/live/tci.burnscoding.com/' + name + '.pem', 'utf8');
+    return fs.readFileSync('/etc/letsencrypt/live/' + config.domain + '/' + name + '.pem', 'utf8');
 };
 var credentials = {
     key: readPEM('privkey'),

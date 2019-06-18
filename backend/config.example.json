@@ -14,5 +14,5 @@
   "gmaps": {
     "key": "<GOOGLE-MAPS-STATIC-KEY>"
   },
-  "domain": "http://localhost:3000"
+  "domain": "localhost"
 }
