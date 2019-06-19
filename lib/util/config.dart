@@ -1,8 +1,8 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
 class Config {
-  static String mapsApiKey = 'AIzaSyCc-3ISZ1GuZ9jC6SbDmr-7m_pjYVKlf2c';
-  static String backendUrl =  'tci.burnscoding.com';
+  static String _mapsApiKey = '';
+  static String backendUrl =  '192.168.1.5';
   static SharedPreferences prefs;
   static dynamic _settings;
   static List<dynamic> settingsListeners = [];
@@ -21,5 +21,12 @@ class Config {
     SharedPreferences.getInstance().then((SharedPreferences prefs) {
       Config.prefs = prefs;
     });
+  }
+
+  static String getMapsApiKey() {
+    return _mapsApiKey;
+  }
+  static void setMapsApiKey(String key) {
+    _mapsApiKey = key;
   }
 }

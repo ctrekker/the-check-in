@@ -1,4 +1,6 @@
 {
+  "http": true,
+  "https": true,
   "database": {
     "host": "127.0.0.1",
     "user": "backend",
@@ -12,7 +14,8 @@
     "pass": "<EMAIL-PASS>"
   },
   "gmaps": {
-    "key": "<GOOGLE-MAPS-STATIC-KEY>"
+    "key": "<GMAPS-STATIC-KEY>",
+    "clientKey": "<GMAPS-KEY>"
   },
   "domain": "localhost",
   "env": "development"

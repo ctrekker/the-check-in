@@ -12,22 +12,26 @@ app.set('env', config.env);
 var httpPort = 80;
 var httpsPort = 443;
 
-var server = http.createServer(app);
-server.listen(httpPort, () => {
-    console.log('Listening on ' + httpPort + ' (http)');
-});
+if(config.http) {
+    var server = http.createServer(app);
+    server.listen(httpPort, function () {
+        console.log('Listening on ' + httpPort + ' (http)');
+    });
+}
 
-var readPEM = function(name) {
-    return fs.readFileSync('/etc/letsencrypt/live/' + config.domain + '/' + name + '.pem', 'utf8');
-};
-var credentials = {
-    key: readPEM('privkey'),
-    cert: readPEM('cert'),
-    ca: readPEM('chain')
-};
+if(config.https) {
+    var readPEM = function (name) {
+        return fs.readFileSync('/etc/letsencrypt/live/' + config.domain + '/' + name + '.pem', 'utf8');
+    };
+    var credentials = {
+        key: readPEM('privkey'),
+        cert: readPEM('cert'),
+        ca: readPEM('chain')
+    };
 
-var httpsServer = https.createServer(credentials, app);
-httpsServer.listen(443, () => {
-   console.log('Listening on ' + httpsPort + ' (https)');
-});
+    var httpsServer = https.createServer(credentials, app);
+    httpsServer.listen(443, function () {
+        console.log('Listening on ' + httpsPort + ' (https)');
+    });
+}
 

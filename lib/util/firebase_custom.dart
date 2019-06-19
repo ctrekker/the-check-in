@@ -16,7 +16,7 @@ class FirebaseBackend {
   static final String baseUrl = Config.backendUrl;
   static Future<BackendStatusResponse> userDetails(String token) async {
     http.Client client = new http.Client();
-    http.Request request = http.Request('POST', new Uri.https(baseUrl, '/user/details'));
+    http.Request request = http.Request('POST', new Uri.http(baseUrl, '/user/details'));
 
     request.bodyFields = {'token': token};
 
@@ -26,7 +26,7 @@ class FirebaseBackend {
   }
   static Future<BackendStatusResponse> createUserWithEmailAndPassword(String email, String password, String name) async {
     http.Client client = new http.Client();
-    http.Request request = http.Request('POST', new Uri.https(baseUrl, '/user/create'));
+    http.Request request = http.Request('POST', new Uri.http(baseUrl, '/user/create'));
 
     request.bodyFields = {'email': email, 'password': password, 'name': name};
 
@@ -36,7 +36,7 @@ class FirebaseBackend {
   }
   static Future<BackendStatusResponse> updateFcmToken(String token, String fcmToken, {bool force=false, int layer=0}) async {
     http.Client client = new http.Client();
-    http.Request request = new http.Request('POST', new Uri.https(baseUrl, '/user/device/fcm'));
+    http.Request request = new http.Request('POST', new Uri.http(baseUrl, '/user/device/fcm'));
 
     String device_id = await getDeviceId(token, force: force);
     print('device_id: '+device_id);
@@ -56,7 +56,7 @@ class FirebaseBackend {
   }
   static Future<dynamic> getAllRecipients(String token) async {
     http.Client client = new http.Client();
-    http.Request request = http.Request('POST', new Uri.https(baseUrl, '/user/recipients/getAll'));
+    http.Request request = http.Request('POST', new Uri.http(baseUrl, '/user/recipients/getAll'));
 
     request.bodyFields = {'token': token};
 
@@ -77,7 +77,7 @@ class FirebaseBackend {
   }
   static Future<BackendStatusResponse> addRecipient(String token, dynamic info) async {
     http.Client client = new http.Client();
-    http.Request request = new http.Request('POST', new Uri.https(baseUrl, '/user/recipients/add'));
+    http.Request request = new http.Request('POST', new Uri.http(baseUrl, '/user/recipients/add'));
 
     request.bodyFields = {'token': token, 'info': json.encode(info)};
 
@@ -87,7 +87,7 @@ class FirebaseBackend {
   }
   static Future<BackendStatusResponse> removeRecipient(String token, int id) async {
     http.Client client = new http.Client();
-    http.Request request = new http.Request('POST', new Uri.https(baseUrl, '/user/recipients/remove'));
+    http.Request request = new http.Request('POST', new Uri.http(baseUrl, '/user/recipients/remove'));
 
     request.bodyFields = {'token': token, 'id': id.toString()};
 
@@ -97,7 +97,7 @@ class FirebaseBackend {
   }
   static Future<BackendStatusResponse> getActivity(String token) async {
     http.Client client = new http.Client();
-    http.Request request = new http.Request('POST', new Uri.https(baseUrl, '/user/activity/get'));
+    http.Request request = new http.Request('POST', new Uri.http(baseUrl, '/user/activity/get'));
 
     request.bodyFields = {'token': token};
 
@@ -107,7 +107,7 @@ class FirebaseBackend {
   }
   static Future<void> setActivityViewed(String token) async {
     http.Client client = new http.Client();
-    http.Request request = new http.Request('POST', new Uri.https(baseUrl, '/user/activity/set/viewed'));
+    http.Request request = new http.Request('POST', new Uri.http(baseUrl, '/user/activity/set/viewed'));
 
     request.bodyFields = {'token': token};
 
@@ -117,7 +117,7 @@ class FirebaseBackend {
   }
   static Future<BackendStatusResponse> checkIn(String token, dynamic info, List<int> recipients, int associatedWith, dynamic flags) async {
     http.Client client = new http.Client();
-    http.Request request = new http.Request('POST', new Uri.https(baseUrl, '/user/checkIn'));
+    http.Request request = new http.Request('POST', new Uri.http(baseUrl, '/user/checkIn'));
 
     request.bodyFields = {'token': token, 'info': json.encode(info), 'recipients': recipients.join(','), 'associatedWith': associatedWith.toString(), 'flags': json.encode(flags)};
 
@@ -127,7 +127,7 @@ class FirebaseBackend {
   }
   static Future<dynamic> getCheckIns(String token, int quantity, int page, String query) async {
     http.Client client = new http.Client();
-    http.Request request = new http.Request('POST', new Uri.https(baseUrl, '/user/checkIn/get'));
+    http.Request request = new http.Request('POST', new Uri.http(baseUrl, '/user/checkIn/get'));
 
     request.bodyFields = {'token': token, 'quantity': quantity.toString(), 'page': page.toString(), 'query': query};
 
@@ -137,7 +137,7 @@ class FirebaseBackend {
   }
   static Future<BackendStatusResponse> getCheckInsResultCount(String token, String query) async {
     http.Client client = new http.Client();
-    http.Request request = new http.Request('POST', new Uri.https(baseUrl, '/user/checkIn/get/resultCount'));
+    http.Request request = new http.Request('POST', new Uri.http(baseUrl, '/user/checkIn/get/resultCount'));
 
     request.bodyFields = {'token': token, 'query': query};
 
@@ -147,7 +147,7 @@ class FirebaseBackend {
   }
   static Future<BackendStatusResponse> getSettings(String token) async {
     http.Client client = new http.Client();
-    http.Request request = new http.Request('POST', new Uri.https(baseUrl, '/user/attribute/settings/get'));
+    http.Request request = new http.Request('POST', new Uri.http(baseUrl, '/user/attribute/settings/get'));
 
     request.bodyFields = {'token': token};
 
@@ -157,7 +157,7 @@ class FirebaseBackend {
   }
   static Future<dynamic> getSettingsScreen() async {
     http.Client client = new http.Client();
-    http.Request request = new http.Request('POST', new Uri.https(baseUrl, '/settings/get'));
+    http.Request request = new http.Request('POST', new Uri.http(baseUrl, '/settings/get'));
 
     http.StreamedResponse response = await client.send(request);
     String jsonStr = await response.stream.bytesToString();
@@ -165,7 +165,7 @@ class FirebaseBackend {
   }
   static Future<BackendStatusResponse> setSettings(String token, dynamic value) async {
     http.Client client = new http.Client();
-    http.Request request = new http.Request('POST', new Uri.https(baseUrl, '/user/attribute/settings/set'));
+    http.Request request = new http.Request('POST', new Uri.http(baseUrl, '/user/attribute/settings/set'));
 
     request.bodyFields = {'token': token, 'value': json.encode(value)};
 
@@ -186,7 +186,7 @@ class FirebaseBackend {
   }
   static Future<BackendStatusResponse> setTimezone(String token, String timeZoneName) async {
     http.Client client = new http.Client();
-    http.Request request = new http.Request('POST', new Uri.https(baseUrl, '/user/attribute/timezone/set'));
+    http.Request request = new http.Request('POST', new Uri.http(baseUrl, '/user/attribute/timezone/set'));
 
     request.bodyFields = {'token': token, 'value': timeZoneName};
 
@@ -196,7 +196,7 @@ class FirebaseBackend {
   }
   static Future<BackendStatusResponse> uploadImage(String token, String imagePath) async {
     http.Client client = new http.Client();
-    http.Request request = new http.Request('POST', new Uri.https(baseUrl, '/user/image/upload'));
+    http.Request request = new http.Request('POST', new Uri.http(baseUrl, '/user/image/upload'));
 
     File f = File(imagePath);
     String imageDataB64 = base64Encode(f.readAsBytesSync());
@@ -206,6 +206,16 @@ class FirebaseBackend {
     http.StreamedResponse response = await client.send(request);
     String jsonStr = await response.stream.bytesToString();
     return BackendStatusResponse.fromJSON(json.decode(jsonStr));
+  }
+  static Future<String> getMapsApiKey() async {
+    http.Client client = new http.Client();
+    http.Request request = new http.Request('POST', new Uri.http(baseUrl, '/user/maps/apiKey'));
+
+    request.bodyFields = {};
+
+    http.StreamedResponse response = await client.send(request);
+    String str = await response.stream.bytesToString();
+    return str;
   }
   static Future<void> sendPasswordResetEmail(email) async {
     await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
@@ -236,7 +246,7 @@ class FirebaseBackend {
     }
     else {
       http.Client client = new http.Client();
-      http.Request request = new http.Request('POST', new Uri.https(baseUrl, '/user/device/init'));
+      http.Request request = new http.Request('POST', new Uri.http(baseUrl, '/user/device/init'));
 
       request.bodyFields = {'token': token};
 
