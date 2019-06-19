@@ -15,6 +15,7 @@ import 'package:the_check_in/util/raised_icon_button.dart' show RaisedIconButton
 import 'package:the_check_in/util/form_input.dart' show FormInput;
 import 'package:the_check_in/view/activity_widget.dart';
 import 'package:the_check_in/view/history_screen.dart';
+import 'package:the_check_in/view/quick_check_in_widget.dart';
 import 'package:the_check_in/view/recipient_selector.dart';
 import 'package:the_check_in/view/settings_screen.dart';
 import 'package:the_check_in/view/user_screen.dart' show UserScreen;
@@ -175,6 +176,7 @@ class _LandingScreenState extends State<LandingScreen> {
   bool _loggedIn = false;
   bool _offline = false;
   ActivityWidget activityWidget;
+  QuickCheckInWidget qciWidget;
   dynamic _themeUpdateCallback;
 
   _LandingScreenState(_themeUpdateCallback) {
@@ -325,7 +327,12 @@ class _LandingScreenState extends State<LandingScreen> {
                   )
                 ]
               ),
-              child: Center(child: Text('Check In', style: Theme.of(context).textTheme.button.merge(TextStyle(color: Colors.white))))
+              child: Center(
+                child: Text('Check In',
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.button.merge(TextStyle(color: Colors.white))
+                )
+              )
             ),
             onTap: () async {
               BackendStatusResponse res = await Navigator.push(
@@ -370,7 +377,12 @@ class _LandingScreenState extends State<LandingScreen> {
                   )
                 ],
               ),
-              child: Center(child: Text('Request Check In', style: Theme.of(context).textTheme.button.merge(TextStyle(color: Colors.white))))
+              child: Center(
+                child: Text('Request Check In',
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.button.merge(TextStyle(color: Colors.white))
+                )
+              )
             ),
             onTap: () async {
               BackendStatusResponse res = await Navigator.push(
@@ -401,6 +413,7 @@ class _LandingScreenState extends State<LandingScreen> {
 
     if(!_showLoading) {
       activityWidget = ActivityWidget(fuser);
+      qciWidget = QuickCheckInWidget(fuser, 3);
       return Scaffold(
         appBar: AppBar(
           title: appTitle,
@@ -408,17 +421,32 @@ class _LandingScreenState extends State<LandingScreen> {
         body: OrientationBuilder(
           builder: (context, orientation) {
             if (orientation == Orientation.portrait) {
+              qciWidget = QuickCheckInWidget(fuser, 3);
               return ListView(
-                padding: const EdgeInsets.all(32.0),
+                padding: const EdgeInsets.only(
+                  left: 32.0,
+                  right: 32.0,
+                  bottom: 32.0
+                ),
                 children: () {
                   if (_loggedIn) {
+                    double spacing = 0.04;
                     return [
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      qciWidget,
+                      Wrap(
                         children: <Widget>[
-                          checkInButton,
-                          checkInRequestButton,
+                          FractionallySizedBox(
+                            widthFactor: 0.4 - spacing / 2,
+                            child: checkInButton
+                          ),
+                          FractionallySizedBox(
+                            widthFactor: spacing,
+                            child: Container()
+                          ),
+                          FractionallySizedBox(
+                            widthFactor: 0.6 - spacing / 2,
+                            child: checkInRequestButton
+                          )
                         ],
                       ),
                       activityWidget
@@ -432,7 +460,8 @@ class _LandingScreenState extends State<LandingScreen> {
             }
             // Landscape orientation
             else {
-              double ratio = 0.6;
+              qciWidget = QuickCheckInWidget(fuser, 2);
+              double ratio = 0.55;
               const double buttonsPadding = 32.0;
               return SingleChildScrollView(
                 controller: _landscapeScrollController,
@@ -447,11 +476,12 @@ class _LandingScreenState extends State<LandingScreen> {
                             padding: EdgeInsets.only(
                               left: buttonsPadding,
                               right: buttonsPadding,
-                              top:  buttonsPadding + _landscapeScrollOffset,
+                              top:  _landscapeScrollOffset,
                               bottom: buttonsPadding
                             ),
                             child: Column(
                               children: <Widget>[
+                                qciWidget,
                                 checkInButton,
                                 Container(
                                   padding: EdgeInsets.only(top: 20.0)
@@ -589,13 +619,6 @@ class _LandingScreenState extends State<LandingScreen> {
         )
     );
   }
-}
-class VerticalDivider extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) => RotatedBox(
-    quarterTurns: 1,
-    child: Divider(),
-  );
 }
 
 class CheckInScreen extends StatefulWidget {

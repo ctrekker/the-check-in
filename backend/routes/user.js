@@ -693,6 +693,67 @@ router.post('/checkIn/get/resultCount', function(req, res) {
         res.json(responses.get('AUTH_BAD_TOKEN', {}, err, null, req));
     });
 });
+router.post('/checkIn/qci', function(req, res) {
+    if(!req.body.token) {
+        res.json(responses.get('AUTH_MISSING_ARGS', {}, null, null, req));
+    }
+    admin.auth().verifyIdToken(req.body.token).then(function(decodedToken) {
+        conn.execute('SELECT recipients, COUNT(recipients) as occurrences FROM check_in WHERE uid=? AND checkin_time > NOW() - INTERVAL 30 DAY GROUP BY recipients ORDER BY occurrences DESC;',
+            [decodedToken.uid],
+            function(err, results, fields) {
+                if(err) {
+                    res.json(responses.get('GENERIC_DB_ERROR', {}, err, decodedToken.uid, req));
+                    return;
+                }
+
+                conn.execute('SELECT id FROM recipients WHERE owner=? AND deleted=1',
+                    [decodedToken.uid],
+                    function(err, deletedRecipients, fields) {
+                        var qci_profiles = [];
+                        for(var i=0; i<results.length; i++) {
+                            var recipients = results[i]['recipients'].split(',');
+                            var hasDeleted = false;
+                            for(var j=0; j<deletedRecipients.length; j++) {
+                                if(recipients.indexOf(deletedRecipients[j]['id'] + '') !== -1) {
+                                    hasDeleted = true;
+                                    break;
+                                }
+                            }
+                            if(hasDeleted) continue;
+
+                            qci_profiles.push(recipients);
+                        }
+
+                        conn.execute(
+                            'SELECT id,name,uid,email,phone_number FROM recipients WHERE owner = ? AND deleted != TRUE',
+                            [decodedToken.uid],
+                            function(err, results, fields) {
+                                if(err) {
+                                    res.json(responses.get('GENERIC_DB_ERROR', {}, err, decodedToken.uid, req));
+                                }
+                                else {
+                                    for(var i=0; i<qci_profiles.length; i++) {
+                                        for(var j=0; j<qci_profiles[i].length; j++) {
+                                            var user_data = {};
+                                            for(var k=0; k<results.length; k++) {
+                                                if(results[k]['id'] + '' === qci_profiles[i][j]) {
+                                                    user_data = results[k];
+                                                }
+                                            }
+                                            qci_profiles[i][j] = user_data;
+                                        }
+                                    }
+
+                                    responses.get('QCI_GET_SUCCESS', {}, null, decodedToken.uid, req);
+                                    res.json(qci_profiles);
+                                }
+                            });
+                    });
+            });
+    }).catch(function(err) {
+        res.json(responses.get('AUTH_BAD_TOKEN', {}, err, null, req));
+    });
+});
 router.post('/image/upload', function(req, res) {
     if(!req.body.token||!req.body.image) {
         res.json(responses.get('AUTH_MISSING_ARGS', {}, null, null, req));
@@ -993,7 +1054,13 @@ function constructJsonMessage(info) {
         });
     }
 
-    if(message.length < 1) {
+    var visibleLength = 0;
+    for(var i=0; i<message.length; i++) {
+        if(message[i].type !== 'hidden') {
+            visibleLength++;
+        }
+    }
+    if(visibleLength < 1) {
         message.push({
             text: 'No details were provided'
         });
