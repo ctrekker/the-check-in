@@ -257,6 +257,25 @@ class _LandingScreenState extends State<LandingScreen> {
     }
   }
 
+  ScrollController _landscapeScrollController;
+  double _landscapeScrollOffset = 0.0;
+
+  @override
+  void initState() {
+    super.initState();
+    _landscapeScrollController = ScrollController()
+      ..addListener(() {
+        setState(() {
+          _landscapeScrollOffset = _landscapeScrollController.offset;
+        });
+      });
+  }
+  @override
+  void dispose() {
+    _landscapeScrollController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     if(_offline) {
@@ -288,65 +307,94 @@ class _LandingScreenState extends State<LandingScreen> {
       auth.onAuthStateChanged.listen((FirebaseUser) => _updateUserStatus());
     }
 
+    double padding = 30.0;
     Widget checkInButton = Builder(
       builder: (BuildContext context) {
-        return RaisedButton(
-          child: Text('Check In'),
-          color: Colors.blue,
-          textColor: Colors.white,
-          onPressed: () async {
-            BackendStatusResponse res = await Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => CheckInScreen()),
-            );
-            if(res != null) {
-              if(res.type == 'success') {
-                Scaffold.of(context).showSnackBar(
-                  SnackBar(content: Text(res.message,
-                      style: Theme.of(context).textTheme.body1.merge(TextStyle(color: Colors.white)))
+        return Container(
+          child: GestureDetector(
+            child: Container(
+              padding: EdgeInsets.all(padding),
+              decoration: BoxDecoration(
+                color: Colors.blue,
+                borderRadius: BorderRadius.all(Radius.circular(90.0)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black45,
+                    offset: Offset(5.0, 5.0),
+                    blurRadius: 10.0
                   )
-                );
-              }
-              else if(res.type == 'warning') {
-                Scaffold.of(context).showSnackBar(
-                  SnackBar(content: Text(res.message,
-                      style: Theme.of(context).textTheme.body1.merge(TextStyle(color: Colors.white)))
-                  )
-                );
+                ]
+              ),
+              child: Center(child: Text('Check In', style: Theme.of(context).textTheme.button.merge(TextStyle(color: Colors.white))))
+            ),
+            onTap: () async {
+              BackendStatusResponse res = await Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => CheckInScreen()),
+              );
+              if(res != null) {
+                if(res.type == 'success') {
+                  Scaffold.of(context).showSnackBar(
+                      SnackBar(content: Text(res.message,
+                          style: Theme.of(context).textTheme.body1.merge(TextStyle(color: Colors.white)))
+                      )
+                  );
+                }
+                else if(res.type == 'warning') {
+                  Scaffold.of(context).showSnackBar(
+                      SnackBar(content: Text(res.message,
+                          style: Theme.of(context).textTheme.body1.merge(TextStyle(color: Colors.white)))
+                      )
+                  );
+                }
               }
             }
-          }
+          )
         );
       }
     );
     Widget checkInRequestButton = Builder(
       builder: (BuildContext context) {
-        return RaisedButton(
-          child: Text('Request Check In'),
-          color: Colors.blue,
-          textColor: Colors.white,
-          onPressed: () async {
-            BackendStatusResponse res = await Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => CheckInRequestScreen()),
-            );
-            if(res != null) {
-              if(res.type == 'success') {
-                Scaffold.of(context).showSnackBar(
-                  SnackBar(content: Text(res.message,
-                      style: Theme.of(context).textTheme.body1.merge(TextStyle(color: Colors.white)))
+        return Container(
+          child: GestureDetector(
+            child: Container(
+              padding: EdgeInsets.all(padding),
+              decoration: BoxDecoration(
+                color: Colors.blue,
+                borderRadius: BorderRadius.all(Radius.circular(90.0)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black45,
+                    offset: Offset(5.0, 5.0),
+                    blurRadius: 10.0
                   )
-                );
-              }
-              else if(res.type == 'warning') {
-                Scaffold.of(context).showSnackBar(
-                  SnackBar(content: Text(res.message,
-                      style: Theme.of(context).textTheme.body1.merge(TextStyle(color: Colors.white)))
-                  )
-                );
+                ],
+              ),
+              child: Center(child: Text('Request Check In', style: Theme.of(context).textTheme.button.merge(TextStyle(color: Colors.white))))
+            ),
+            onTap: () async {
+              BackendStatusResponse res = await Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => CheckInRequestScreen()),
+              );
+              if(res != null) {
+                if(res.type == 'success') {
+                  Scaffold.of(context).showSnackBar(
+                    SnackBar(content: Text(res.message,
+                        style: Theme.of(context).textTheme.body1.merge(TextStyle(color: Colors.white)))
+                    )
+                  );
+                }
+                else if(res.type == 'warning') {
+                  Scaffold.of(context).showSnackBar(
+                    SnackBar(content: Text(res.message,
+                        style: Theme.of(context).textTheme.body1.merge(TextStyle(color: Colors.white)))
+                    )
+                  );
+                }
               }
             }
-          }
+          )
         );
       }
     );
@@ -357,20 +405,101 @@ class _LandingScreenState extends State<LandingScreen> {
         appBar: AppBar(
           title: appTitle,
         ),
-        body: ListView(
-          padding: const EdgeInsets.all(32.0),
-          children: () {
-            if(_loggedIn) {
-              return [
-                checkInButton,
-                checkInRequestButton,
-                activityWidget
-              ];
+        body: OrientationBuilder(
+          builder: (context, orientation) {
+            if (orientation == Orientation.portrait) {
+              return ListView(
+                padding: const EdgeInsets.all(32.0),
+                children: () {
+                  if (_loggedIn) {
+                    return [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: <Widget>[
+                          checkInButton,
+                          checkInRequestButton,
+                        ],
+                      ),
+                      activityWidget
+                    ];
+                  }
+                  else {
+                    return <Widget>[];
+                  }
+                }()
+              );
             }
+            // Landscape orientation
             else {
-              return <Widget>[];
+              double ratio = 0.6;
+              const double buttonsPadding = 32.0;
+              return SingleChildScrollView(
+                controller: _landscapeScrollController,
+                child: Container(
+//                  padding: EdgeInsets.all(32.0),
+                  child: Wrap(
+                    children: [
+                      FractionallySizedBox(
+                        widthFactor: 1.0 - ratio,
+                        child: Container(
+                          child: Container(
+                            padding: EdgeInsets.only(
+                              left: buttonsPadding,
+                              right: buttonsPadding,
+                              top:  buttonsPadding + _landscapeScrollOffset,
+                              bottom: buttonsPadding
+                            ),
+                            child: Column(
+                              children: <Widget>[
+                                checkInButton,
+                                Container(
+                                  padding: EdgeInsets.only(top: 20.0)
+                                ),
+                                checkInRequestButton,
+                              ],
+                            )
+                          )
+                        )
+                      ),
+                      FractionallySizedBox(
+                        widthFactor: 0.05,
+                        child: Container(
+                          padding: EdgeInsets.only(
+                              top: _landscapeScrollOffset
+                          ),
+                          child: SizedBox(
+                            width: 16.0,
+                            child: Center(
+                              child: Container(
+                                width: 0.0,
+                                height: 330.0,
+                                decoration: BoxDecoration(
+                                  border: Border(
+                                    right: BorderSide(
+                                      color: Theme.of(context).dividerColor,
+                                      width: 0.0,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          )
+                        )
+                      ),
+                      FractionallySizedBox(
+                        widthFactor: ratio - 0.05,
+                        child: Container(
+                          padding: EdgeInsets.only(right: 15.0),
+                          child: activityWidget
+                        )
+                      )
+                    ]
+                  )
+                )
+              );
             }
-          }()
+          }
         ),
         drawer: () {
           if(_loggedIn) {
@@ -460,6 +589,13 @@ class _LandingScreenState extends State<LandingScreen> {
         )
     );
   }
+}
+class VerticalDivider extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) => RotatedBox(
+    quarterTurns: 1,
+    child: Divider(),
+  );
 }
 
 class CheckInScreen extends StatefulWidget {
