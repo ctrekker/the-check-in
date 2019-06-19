@@ -32,7 +32,10 @@ final Text appTitle = Text('The Check In');
 void main() {
   Config.init();
 
-  Maps.MapView.setApiKey(Config.mapsApiKey);
+  FirebaseBackend.getMapsApiKey().then((key) {
+    Config.setMapsApiKey(key);
+    Maps.MapView.setApiKey(Config.getMapsApiKey());
+  });
 
   runApp(new MyApp());
   cameraInit();

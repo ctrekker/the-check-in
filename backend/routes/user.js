@@ -10,6 +10,7 @@ var md5 = require('md5');
 var Twig = require('twig');
 var dateFormat = require('dateformat');
 var moment = require('moment-timezone');
+var config = require('../config.json');
 
 var serviceAccount = require('../firebase-admin-key.json');
 admin.initializeApp({
@@ -728,6 +729,10 @@ router.post('/image/upload', function(req, res) {
             }
         });
     });
+});
+
+router.post('/maps/apiKey', function(req, res) {
+    res.send(config.gmaps.clientKey);
 });
 
 function getRecipients(token, callback, isUid, showDeleted) {

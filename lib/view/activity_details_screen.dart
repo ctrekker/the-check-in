@@ -19,7 +19,7 @@ class ActivityDetailsScreen extends StatefulWidget {
 }
 class ActivityDetailsScreenState extends State<ActivityDetailsScreen> {
   dynamic _message;
-  StaticMapProvider mapProvider = new StaticMapProvider(Config.mapsApiKey);
+  StaticMapProvider mapProvider = new StaticMapProvider(Config.getMapsApiKey());
 
   ActivityDetailsScreenState(String message) {
     _message = json.decode(message);
