@@ -288,65 +288,94 @@ class _LandingScreenState extends State<LandingScreen> {
       auth.onAuthStateChanged.listen((FirebaseUser) => _updateUserStatus());
     }
 
+    double padding = 30.0;
     Widget checkInButton = Builder(
       builder: (BuildContext context) {
-        return RaisedButton(
-          child: Text('Check In'),
-          color: Colors.blue,
-          textColor: Colors.white,
-          onPressed: () async {
-            BackendStatusResponse res = await Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => CheckInScreen()),
-            );
-            if(res != null) {
-              if(res.type == 'success') {
-                Scaffold.of(context).showSnackBar(
-                  SnackBar(content: Text(res.message,
-                      style: Theme.of(context).textTheme.body1.merge(TextStyle(color: Colors.white)))
+        return Container(
+          child: GestureDetector(
+            child: Container(
+              padding: EdgeInsets.all(padding),
+              decoration: BoxDecoration(
+                color: Colors.blue,
+                borderRadius: BorderRadius.all(Radius.circular(90.0)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black45,
+                    offset: Offset(5.0, 5.0),
+                    blurRadius: 10.0
                   )
-                );
-              }
-              else if(res.type == 'warning') {
-                Scaffold.of(context).showSnackBar(
-                  SnackBar(content: Text(res.message,
-                      style: Theme.of(context).textTheme.body1.merge(TextStyle(color: Colors.white)))
-                  )
-                );
+                ]
+              ),
+              child: Center(child: Text('Check In', style: Theme.of(context).textTheme.button.merge(TextStyle(color: Colors.white))))
+            ),
+            onTap: () async {
+              BackendStatusResponse res = await Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => CheckInScreen()),
+              );
+              if(res != null) {
+                if(res.type == 'success') {
+                  Scaffold.of(context).showSnackBar(
+                      SnackBar(content: Text(res.message,
+                          style: Theme.of(context).textTheme.body1.merge(TextStyle(color: Colors.white)))
+                      )
+                  );
+                }
+                else if(res.type == 'warning') {
+                  Scaffold.of(context).showSnackBar(
+                      SnackBar(content: Text(res.message,
+                          style: Theme.of(context).textTheme.body1.merge(TextStyle(color: Colors.white)))
+                      )
+                  );
+                }
               }
             }
-          }
+          )
         );
       }
     );
     Widget checkInRequestButton = Builder(
       builder: (BuildContext context) {
-        return RaisedButton(
-          child: Text('Request Check In'),
-          color: Colors.blue,
-          textColor: Colors.white,
-          onPressed: () async {
-            BackendStatusResponse res = await Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => CheckInRequestScreen()),
-            );
-            if(res != null) {
-              if(res.type == 'success') {
-                Scaffold.of(context).showSnackBar(
-                  SnackBar(content: Text(res.message,
-                      style: Theme.of(context).textTheme.body1.merge(TextStyle(color: Colors.white)))
+        return Container(
+          child: GestureDetector(
+            child: Container(
+              padding: EdgeInsets.all(padding),
+              decoration: BoxDecoration(
+                color: Colors.blue,
+                borderRadius: BorderRadius.all(Radius.circular(90.0)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black45,
+                    offset: Offset(5.0, 5.0),
+                    blurRadius: 10.0
                   )
-                );
-              }
-              else if(res.type == 'warning') {
-                Scaffold.of(context).showSnackBar(
-                  SnackBar(content: Text(res.message,
-                      style: Theme.of(context).textTheme.body1.merge(TextStyle(color: Colors.white)))
-                  )
-                );
+                ],
+              ),
+              child: Center(child: Text('Request Check In', style: Theme.of(context).textTheme.button.merge(TextStyle(color: Colors.white))))
+            ),
+            onTap: () async {
+              BackendStatusResponse res = await Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => CheckInRequestScreen()),
+              );
+              if(res != null) {
+                if(res.type == 'success') {
+                  Scaffold.of(context).showSnackBar(
+                    SnackBar(content: Text(res.message,
+                        style: Theme.of(context).textTheme.body1.merge(TextStyle(color: Colors.white)))
+                    )
+                  );
+                }
+                else if(res.type == 'warning') {
+                  Scaffold.of(context).showSnackBar(
+                    SnackBar(content: Text(res.message,
+                        style: Theme.of(context).textTheme.body1.merge(TextStyle(color: Colors.white)))
+                    )
+                  );
+                }
               }
             }
-          }
+          )
         );
       }
     );
@@ -362,8 +391,14 @@ class _LandingScreenState extends State<LandingScreen> {
           children: () {
             if(_loggedIn) {
               return [
-                checkInButton,
-                checkInRequestButton,
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: <Widget>[
+                    checkInButton,
+                    checkInRequestButton,
+                  ],
+                ),
                 activityWidget
               ];
             }
