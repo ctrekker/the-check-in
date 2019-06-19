@@ -145,6 +145,27 @@ class FirebaseBackend {
     String jsonStr = await response.stream.bytesToString();
     return BackendStatusResponse.fromJSON(json.decode(jsonStr));
   }
+  static Future<dynamic> getQuickCheckIns(String token) async {
+    http.Client client = new http.Client();
+    http.Request request = http.Request('POST', new Uri.http(baseUrl, '/user/checkIn/qci'));
+
+    request.bodyFields = {'token': token};
+
+    try {
+      http.StreamedResponse response = await client.send(request).timeout(
+          Duration(seconds: 8));
+      String jsonStr = await response.stream.bytesToString();
+
+      client.close();
+
+      return json.decode(jsonStr);
+    } on TimeoutException catch(_) {
+      return null;
+    } on SocketException catch(e) {
+      print(e);
+      return null;
+    }
+  }
   static Future<BackendStatusResponse> getSettings(String token) async {
     http.Client client = new http.Client();
     http.Request request = new http.Request('POST', new Uri.http(baseUrl, '/user/attribute/settings/get'));

@@ -123,6 +123,10 @@ var responses = {
     UPLOAD_DATA_MALFORMED: {
         type: 'error',
         code: 'upload/malformed-data'
+    },
+    QCI_GET_SUCCESS: {
+        type: 'success',
+        code: 'qci/get-success'
     }
 };
 module.exports = {
