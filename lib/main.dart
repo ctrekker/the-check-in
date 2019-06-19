@@ -257,6 +257,25 @@ class _LandingScreenState extends State<LandingScreen> {
     }
   }
 
+  ScrollController _landscapeScrollController;
+  double _landscapeScrollOffset = 0.0;
+
+  @override
+  void initState() {
+    super.initState();
+    _landscapeScrollController = ScrollController()
+      ..addListener(() {
+        setState(() {
+          _landscapeScrollOffset = _landscapeScrollController.offset;
+        });
+      });
+  }
+  @override
+  void dispose() {
+    _landscapeScrollController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     if(_offline) {
@@ -386,26 +405,101 @@ class _LandingScreenState extends State<LandingScreen> {
         appBar: AppBar(
           title: appTitle,
         ),
-        body: ListView(
-          padding: const EdgeInsets.all(32.0),
-          children: () {
-            if(_loggedIn) {
-              return [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: <Widget>[
-                    checkInButton,
-                    checkInRequestButton,
-                  ],
-                ),
-                activityWidget
-              ];
+        body: OrientationBuilder(
+          builder: (context, orientation) {
+            if (orientation == Orientation.portrait) {
+              return ListView(
+                padding: const EdgeInsets.all(32.0),
+                children: () {
+                  if (_loggedIn) {
+                    return [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: <Widget>[
+                          checkInButton,
+                          checkInRequestButton,
+                        ],
+                      ),
+                      activityWidget
+                    ];
+                  }
+                  else {
+                    return <Widget>[];
+                  }
+                }()
+              );
             }
+            // Landscape orientation
             else {
-              return <Widget>[];
+              double ratio = 0.6;
+              const double buttonsPadding = 32.0;
+              return SingleChildScrollView(
+                controller: _landscapeScrollController,
+                child: Container(
+//                  padding: EdgeInsets.all(32.0),
+                  child: Wrap(
+                    children: [
+                      FractionallySizedBox(
+                        widthFactor: 1.0 - ratio,
+                        child: Container(
+                          child: Container(
+                            padding: EdgeInsets.only(
+                              left: buttonsPadding,
+                              right: buttonsPadding,
+                              top:  buttonsPadding + _landscapeScrollOffset,
+                              bottom: buttonsPadding
+                            ),
+                            child: Column(
+                              children: <Widget>[
+                                checkInButton,
+                                Container(
+                                  padding: EdgeInsets.only(top: 20.0)
+                                ),
+                                checkInRequestButton,
+                              ],
+                            )
+                          )
+                        )
+                      ),
+                      FractionallySizedBox(
+                        widthFactor: 0.05,
+                        child: Container(
+                          padding: EdgeInsets.only(
+                              top: _landscapeScrollOffset
+                          ),
+                          child: SizedBox(
+                            width: 16.0,
+                            child: Center(
+                              child: Container(
+                                width: 0.0,
+                                height: 330.0,
+                                decoration: BoxDecoration(
+                                  border: Border(
+                                    right: BorderSide(
+                                      color: Theme.of(context).dividerColor,
+                                      width: 0.0,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          )
+                        )
+                      ),
+                      FractionallySizedBox(
+                        widthFactor: ratio - 0.05,
+                        child: Container(
+                          padding: EdgeInsets.only(right: 15.0),
+                          child: activityWidget
+                        )
+                      )
+                    ]
+                  )
+                )
+              );
             }
-          }()
+          }
         ),
         drawer: () {
           if(_loggedIn) {
@@ -495,6 +589,13 @@ class _LandingScreenState extends State<LandingScreen> {
         )
     );
   }
+}
+class VerticalDivider extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) => RotatedBox(
+    quarterTurns: 1,
+    child: Divider(),
+  );
 }
 
 class CheckInScreen extends StatefulWidget {
