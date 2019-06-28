@@ -78,10 +78,13 @@ class QuickCheckInWidgetState extends State<QuickCheckInWidget> {
       _checkInLoading = false;
     });
 
-    if(res.type == 'success') {
+    if(res != null) {
       Scaffold.of(context).showSnackBar(
-        SnackBar(content: Text(res.message,
-          style: Theme.of(context).textTheme.body1.merge(TextStyle(color: Colors.white)))
+        SnackBar(
+          content: Text(res.message,
+            style: Theme.of(context).textTheme.body1.merge(TextStyle(color: Colors.white))
+          ),
+          duration: Duration(seconds: 2),
         )
       );
     }

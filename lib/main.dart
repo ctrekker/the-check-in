@@ -343,14 +343,16 @@ class _LandingScreenState extends State<LandingScreen> {
                 if(res.type == 'success') {
                   Scaffold.of(context).showSnackBar(
                       SnackBar(content: Text(res.message,
-                          style: Theme.of(context).textTheme.body1.merge(TextStyle(color: Colors.white)))
+                          style: Theme.of(context).textTheme.body1.merge(TextStyle(color: Colors.white))),
+                        duration: Duration(seconds: 2),
                       )
                   );
                 }
-                else if(res.type == 'warning') {
+                else if(res.type == 'warning' || res.type == 'error') {
                   Scaffold.of(context).showSnackBar(
                       SnackBar(content: Text(res.message,
-                          style: Theme.of(context).textTheme.body1.merge(TextStyle(color: Colors.white)))
+                          style: Theme.of(context).textTheme.body1.merge(TextStyle(color: Colors.white))),
+                        duration: Duration(seconds: 2),
                       )
                   );
                 }
@@ -393,14 +395,16 @@ class _LandingScreenState extends State<LandingScreen> {
                 if(res.type == 'success') {
                   Scaffold.of(context).showSnackBar(
                     SnackBar(content: Text(res.message,
-                        style: Theme.of(context).textTheme.body1.merge(TextStyle(color: Colors.white)))
+                        style: Theme.of(context).textTheme.body1.merge(TextStyle(color: Colors.white))),
+                      duration: Duration(seconds: 2),
                     )
                   );
                 }
-                else if(res.type == 'warning') {
+                else if(res.type == 'warning' || res.type == 'error') {
                   Scaffold.of(context).showSnackBar(
                     SnackBar(content: Text(res.message,
-                        style: Theme.of(context).textTheme.body1.merge(TextStyle(color: Colors.white)))
+                        style: Theme.of(context).textTheme.body1.merge(TextStyle(color: Colors.white))),
+                      duration: Duration(seconds: 2),
                     )
                   );
                 }
