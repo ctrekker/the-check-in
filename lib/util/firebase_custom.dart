@@ -13,6 +13,9 @@ import 'dart:async';
 import 'package:the_check_in/view/activity_details_screen.dart';
 
 class FirebaseBackend {
+  static int lastCheckInTime = new DateTime.now().millisecondsSinceEpoch;
+  static int lastCheckInCount = 0;
+
   static final String baseUrl = Config.backendUrl;
   static Future<BackendStatusResponse> userDetails(String token) async {
     http.Client client = new http.Client();
@@ -116,6 +119,22 @@ class FirebaseBackend {
     return BackendStatusResponse.fromJSON(json.decode(jsonStr));
   }
   static Future<BackendStatusResponse> checkIn(String token, dynamic info, List<int> recipients, int associatedWith, dynamic flags) async {
+    // Cooldown check
+    int currentTime = new DateTime.now().millisecondsSinceEpoch;
+    if(lastCheckInTime + 60 * 1000 < currentTime) {
+      lastCheckInTime = currentTime;
+      lastCheckInCount = 1;
+    }
+    else if(lastCheckInCount < Config.maxCheckInsPerMinute) {
+      lastCheckInCount++;
+    }
+    else {
+      return new BackendStatusResponse(
+        type: 'error',
+        message: 'You have exceeded the max check in count of ' + Config.maxCheckInsPerMinute.toString() + ' per minute'
+      );
+    }
+
     http.Client client = new http.Client();
     http.Request request = new http.Request('POST', new Uri.http(baseUrl, '/user/checkIn'));
 

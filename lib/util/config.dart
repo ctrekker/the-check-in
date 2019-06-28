@@ -6,6 +6,7 @@ class Config {
   static SharedPreferences prefs;
   static dynamic _settings;
   static List<dynamic> settingsListeners = [];
+  static int maxCheckInsPerMinute = 5;
 
   static dynamic getSettings() {
     return _settings;
