@@ -2,7 +2,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class Config {
   static String _mapsApiKey = '';
-  static String backendUrl =  '192.168.1.5';
+  static String backendUrl =  '192.168.1.8';
   static SharedPreferences prefs;
   static dynamic _settings;
   static List<dynamic> settingsListeners = [];

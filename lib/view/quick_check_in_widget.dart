@@ -19,6 +19,7 @@ class QuickCheckInWidgetState extends State<QuickCheckInWidget> {
   FirebaseUser _user;
   int _buttonCount = 3;
   bool _initLoading = true;
+  bool _checkInLoading = false;
   dynamic _qciData;
 
   QuickCheckInWidgetState(FirebaseUser user, int buttonCount) {
@@ -37,7 +38,7 @@ class QuickCheckInWidgetState extends State<QuickCheckInWidget> {
   }
   dynamic _getButtonText(int index) {
     dynamic meta = _qciData[index];
-    if(meta.length == 1) {
+    if(meta.length == 1 && meta[0].keys.length > 0) {
       return {
         'short': meta[0]['name'].split(' ')[0],
         'long': meta[0]['name']
@@ -61,7 +62,9 @@ class QuickCheckInWidgetState extends State<QuickCheckInWidget> {
     }
   }
   void _buttonPress(index) async {
-    print(index);
+    setState(() {
+      _checkInLoading = true;
+    });
 
     List<int> recipientList = [];
     for(int i=0; i<_qciData[index].length; i++) {
@@ -71,6 +74,10 @@ class QuickCheckInWidgetState extends State<QuickCheckInWidget> {
     String token = await _user.getIdToken();
     BackendStatusResponse res = await FirebaseBackend.checkIn(token, {}, recipientList, -1, {});
 
+    setState(() {
+      _checkInLoading = false;
+    });
+
     if(res.type == 'success') {
       Scaffold.of(context).showSnackBar(
         SnackBar(content: Text(res.message,
@@ -78,7 +85,6 @@ class QuickCheckInWidgetState extends State<QuickCheckInWidget> {
         )
       );
     }
-    print(res);
   }
 
   @override
@@ -94,7 +100,20 @@ class QuickCheckInWidgetState extends State<QuickCheckInWidget> {
           children: [
             Wrap(
               children: [
-                Text('Quick Check In', textAlign: TextAlign.left)
+                Text('Quick Check In', textAlign: TextAlign.left),
+                () {
+                  if(_checkInLoading) {
+                    return Container(
+                      padding: EdgeInsets.only(left: 8.0),
+                      child: SizedBox(
+                          width: 16.0,
+                          height: 16.0,
+                          child: CircularProgressIndicator(strokeWidth: 2.0)
+                      )
+                    );
+                  }
+                  return Container();
+                }()
               ]
             ),
             Wrap(
@@ -103,20 +122,23 @@ class QuickCheckInWidgetState extends State<QuickCheckInWidget> {
                 double numButtons = _qciData.length.toDouble();
                 if(numButtons > _buttonCount.toDouble()) numButtons = _buttonCount.toDouble();
                 for(int i=0; i<numButtons; i++) {
-                  qciButtons.add(FractionallySizedBox(
-                    widthFactor: 1.0 / numButtons,
-                    child: Tooltip(
-                      message: _getButtonText(i)['long'],
-                      preferBelow: false,
-                      child: RaisedButton(
-                        child: Text(_getButtonText(i)['short'], style: () {
-                          TextStyle style = Theme.of(context).textTheme.button;
-                          return style.merge(TextStyle(fontSize: style.fontSize - 1.0));
-                        }()),
-                        onPressed: () { _buttonPress(i); }
+                  dynamic buttonText = _getButtonText(i);
+                  if(buttonText['short'] != '') {
+                    qciButtons.add(FractionallySizedBox(
+                      widthFactor: 1.0 / numButtons,
+                      child: Tooltip(
+                        message: buttonText['long'],
+                        preferBelow: false,
+                        child: RaisedButton(
+                          child: Text(buttonText['short'], style: () {
+                            TextStyle style = Theme.of(context).textTheme.button;
+                            return style.merge(TextStyle(fontSize: style.fontSize - 1.0));
+                          }()),
+                          onPressed: () { _buttonPress(i); }
+                        )
                       )
-                    )
-                  ));
+                    ));
+                  }
                 }
                 return qciButtons;
               }()
