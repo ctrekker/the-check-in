@@ -12,7 +12,6 @@ import 'dart:async';
 import 'dart:io';
 import 'package:the_check_in/util/rating_widget.dart' show RatingWidget;
 import 'package:the_check_in/util/raised_icon_button.dart' show RaisedIconButton;
-import 'package:the_check_in/util/form_input.dart' show FormInput;
 import 'package:the_check_in/view/activity_widget.dart';
 import 'package:the_check_in/view/history_screen.dart';
 import 'package:the_check_in/view/quick_check_in_widget.dart';
@@ -175,6 +174,7 @@ class _LandingScreenState extends State<LandingScreen> {
   bool _showLoading = true;
   bool _loggedIn = false;
   bool _offline = false;
+  bool _blacklistedVersion = false;
   ActivityWidget activityWidget;
   QuickCheckInWidget qciWidget;
   dynamic _themeUpdateCallback;
@@ -208,8 +208,14 @@ class _LandingScreenState extends State<LandingScreen> {
 
     if(await _isConnected()) {
       fuser = await auth.currentUser();
+      dynamic checkBlacklisted = await FirebaseBackend.checkBlacklistedVersion(Config.applicationVersion);
 
-      if (fuser != null) {
+      if(checkBlacklisted['blacklisted']) {
+        setState(() {
+          _blacklistedVersion = true;
+        });
+      }
+      else if (fuser != null) {
         String token = await fuser.getIdToken();
         print(token);
         FirebaseBackend.setTimezone(token, DateTime.now().timeZoneOffset.inHours.toString()+":"+DateTime.now().timeZoneName);
@@ -297,6 +303,23 @@ class _LandingScreenState extends State<LandingScreen> {
                     });
                   },
                 )
+              ],
+            )
+          )
+        )
+      );
+    }
+    else if(_blacklistedVersion) {
+      return Scaffold(
+        body: Container(
+          padding: EdgeInsets.all(32.0),
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                Text('You are using a version of this app we no longer support. Please upgrade to continue', textAlign: TextAlign.center),
+                Container(padding: EdgeInsets.only(top: 24.0)),
+                Text('Current version: ' + Config.applicationVersion)
               ],
             )
           )

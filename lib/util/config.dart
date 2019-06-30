@@ -4,6 +4,7 @@ class Config {
   static String _mapsApiKey = '';
   static String backendProtocol = 'http'; // 'http|https'
   static String backendUrl =  '192.168.1.8';
+  static String applicationVersion = '1.0.0';
   static SharedPreferences prefs;
   static dynamic _settings;
   static List<dynamic> settingsListeners = [];

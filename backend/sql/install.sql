@@ -114,6 +114,13 @@ CREATE TABLE email_blacklist(
   email VARCHAR(254)
 );
 
+DROP TABLE IF EXISTS version_blacklist;
+CREATE TABLE version_blacklist(
+  id INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
+  version VARCHAR(39) NOT NULL,
+  reason TEXT
+);
+
 # attributes.sql
 DELETE FROM attributes;
 

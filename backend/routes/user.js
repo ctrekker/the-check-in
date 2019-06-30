@@ -796,6 +796,29 @@ router.post('/maps/apiKey', function(req, res) {
     res.send(config.gmaps.clientKey);
 });
 
+router.post('/version/:versionTag/checkBlacklisted', function(req, res) {
+    conn.execute(
+        'SELECT version, reason FROM version_blacklist WHERE version = ?',
+        [req.params.versionTag],
+        function(err, results, fields) {
+            if(err) {
+                responses.get('GENERIC_DB_ERROR', {}, err, decodedToken.uid, req);
+            }
+            else {
+                if(results.length > 0) {
+                    results[0]['blacklisted'] = true;
+                    res.send(results[0]);
+                }
+                else {
+                    res.send({
+                        version: req.params.versionTag,
+                        blacklisted: false
+                    });
+                }
+            }
+        });
+});
+
 function getRecipients(token, callback, isUid, showDeleted) {
     isUid = isUid || false;
     showDeleted = showDeleted || false;
