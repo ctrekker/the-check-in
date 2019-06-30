@@ -5,7 +5,8 @@
   },
   "https": {
     "port": 443,
-    "enabled": true
+    "enabled": true,
+    "certRoot": ""
   },
   "database": {
     "host": "35.224.198.150",

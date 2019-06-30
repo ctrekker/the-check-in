@@ -8,6 +8,6 @@ apt-get update -y
 
 apt-get install certbot -y
 
-certbot certonly --standalone -d $1 -n
+certbot certonly --standalone -d $1 -n --agree-tos -m $2
 
 

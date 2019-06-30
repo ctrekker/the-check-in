@@ -21,7 +21,7 @@ if(config.http.enabled) {
 
 if(config.https.enabled) {
     var readPEM = function (name) {
-        return fs.readFileSync('/etc/letsencrypt/live/' + config.domain + '/' + name + '.pem', 'utf8');
+        return fs.readFileSync((config.https.certRoot ? config.https.certRoot + '/' : '/etc/letsencrypt/live/' + config.domain + '/') + name + '.pem', 'utf8');
     };
     var credentials = {
         key: readPEM('privkey'),
@@ -30,7 +30,7 @@ if(config.https.enabled) {
     };
 
     var httpsServer = https.createServer(credentials, app);
-    httpsServer.listen(443, function () {
+    httpsServer.listen(config.https.port, function () {
         console.log('Listening on ' + httpsPort + ' (https)');
     });
 }
