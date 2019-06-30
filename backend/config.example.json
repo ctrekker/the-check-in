@@ -11,6 +11,7 @@
     "service": "gmail",
     "host": "smtp.gmail.com",
     "user": "<EMAIL-USER>",
+    "port": 465,
     "pass": "<EMAIL-PASS>"
   },
   "gmaps": {
