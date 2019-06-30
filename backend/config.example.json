@@ -2,7 +2,7 @@
   "http": true,
   "https": true,
   "database": {
-    "host": "127.0.0.1",
+    "host": "35.224.198.150",
     "user": "backend",
     "database": "backend",
     "password": "<DB-PASS>"
