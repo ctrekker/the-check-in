@@ -23,25 +23,12 @@ global.conn = mysql.createConnection({
 });
 global.email = nodemailer.createTransport(smtpTransport({
     host: config.email.host,
-    port: 25,
+    port: config.email.port,
     auth: {
         user: config.email.user,
         pass: config.email.pass
     }
 }));
-email.sendMail({
-    from: 'thecheckin@burnscoding.com',
-    bcc: 'ctrekker4@gmail.com',
-    subject: 'Automated message',
-    html: '<h2>This is an automated update message</h2><p>Hi Connor, this is thecheckin backend!</p>'
-}, function(err, info) {
-    if(err) {
-        console.log(err);
-    }
-    else {
-        console.log('Mail sent!');
-    }
-});
 global.gmaps = new GoogleMapsAPI({
     key: config.gmaps.key
 });
