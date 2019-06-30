@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:the_check_in/util/firebase_custom.dart';
 import 'package:the_check_in/util/text_divider.dart';
@@ -20,6 +21,7 @@ class ActivityWidgetState extends State<ActivityWidget> {
 
   FirebaseUser _user;
   bool _loading = true;
+  bool _loadingOverride = false;
   bool _silentReload = false;
   Timer _silentReloadTimer;
   dynamic _activities;
@@ -170,6 +172,7 @@ class ActivityWidgetState extends State<ActivityWidget> {
     if(_loading) {
       _loadActivities();
     }
+    TextStyle linkTextStyle = TextStyle(color: Colors.blue);
     return Container(
       child: Column(
         children: <Widget>[
@@ -192,8 +195,29 @@ class ActivityWidgetState extends State<ActivityWidget> {
             ],
           ),
           Divider(),
+          Column(
+            children: [
+              RichText(
+                text: TextSpan(
+                  text: 'Mark all as read',
+                  style: Theme.of(context).textTheme.body1.merge(linkTextStyle),
+                  recognizer: TapGestureRecognizer()
+                    ..onTap = () async {
+                      setState(() {
+                        _loadingOverride = true;
+                      });
+                      FirebaseBackend.setActivityViewed(await _user.getIdToken());
+                      setState(() {
+                        _loadingOverride = false;
+                        _loading = true;
+                      });
+                    }
+                )
+              ),
+            ]
+          ),
           () {
-            if(!_loading) return _buildActivityList();
+            if(!_loading && !_loadingOverride) return _buildActivityList();
             else return Container(
               padding: EdgeInsets.all(24.0),
               child: Center(
@@ -202,7 +226,7 @@ class ActivityWidgetState extends State<ActivityWidget> {
             );
           }()
         ],
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.end,
       ),
       padding: EdgeInsets.all(12.0)
     );
