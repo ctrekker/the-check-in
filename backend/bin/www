@@ -30,7 +30,7 @@ if(config.https.enabled) {
     };
 
     var httpsServer = https.createServer(credentials, app);
-    httpsServer.listen(443, function () {
+    httpsServer.listen(config.https.port, function () {
         console.log('Listening on ' + httpsPort + ' (https)');
     });
 }
