@@ -2,6 +2,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class Config {
   static String _mapsApiKey = '';
+  static String backendProtocol = 'https'; // 'http|https'
   static String backendUrl =  '192.168.1.8';
   static SharedPreferences prefs;
   static dynamic _settings;
