@@ -9,17 +9,17 @@ var fs = require('fs');
 
 app.set('env', config.env);
 
-var httpPort = 80;
-var httpsPort = 443;
+var httpPort = config.http.port;
+var httpsPort = config.https.port;
 
-if(config.http) {
+if(config.http.enabled) {
     var server = http.createServer(app);
     server.listen(httpPort, function () {
         console.log('Listening on ' + httpPort + ' (http)');
     });
 }
 
-if(config.https) {
+if(config.https.enabled) {
     var readPEM = function (name) {
         return fs.readFileSync('/etc/letsencrypt/live/' + config.domain + '/' + name + '.pem', 'utf8');
     };
