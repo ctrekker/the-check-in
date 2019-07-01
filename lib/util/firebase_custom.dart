@@ -25,6 +25,31 @@ class FirebaseBackend {
       return new Uri.http(baseUrl, path);
     }
   }
+  static Future<bool> checkBackendOnline() async {
+    try {
+      http.Client client = new http.Client();
+      http.Request request = new http.Request('GET', getBackendUri('/'));
+
+      request.bodyFields = {};
+
+      http.StreamedResponse response = await client.send(request).timeout(Duration(seconds: 5));
+      return true;
+    } on SocketException catch (_) {
+      return false;
+    } on TimeoutException catch (_) {
+      return false;
+    }
+  }
+  static Future<dynamic> checkBlacklistedVersion(String version) async {
+    http.Client client = new http.Client();
+    http.Request request = new http.Request('POST', getBackendUri('/user/version/' + version + '/checkBlacklisted'));
+
+    request.bodyFields = {};
+
+    http.StreamedResponse response = await client.send(request);
+    String jsonStr = await response.stream.bytesToString();
+    return json.decode(jsonStr);
+  }
   static Future<BackendStatusResponse> userDetails(String token) async {
     http.Client client = new http.Client();
     http.Request request = http.Request('POST', getBackendUri('/user/details'));
@@ -267,16 +292,6 @@ class FirebaseBackend {
   }
   static Future<void> sendPasswordResetEmail(email) async {
     await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
-  }
-  static Future<dynamic> checkBlacklistedVersion(String version) async {
-    http.Client client = new http.Client();
-    http.Request request = new http.Request('POST', getBackendUri('/user/version/' + version + '/checkBlacklisted'));
-
-    request.bodyFields = {};
-
-    http.StreamedResponse response = await client.send(request);
-    String jsonStr = await response.stream.bytesToString();
-    return json.decode(jsonStr);
   }
 
   static dynamic parseSettings(BackendStatusResponse r) {

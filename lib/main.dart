@@ -32,10 +32,18 @@ final Text appTitle = Text('The Check In');
 void main() {
   Config.init();
 
-  FirebaseBackend.getMapsApiKey().then((key) {
-    Config.setMapsApiKey(key);
-    Maps.MapView.setApiKey(Config.getMapsApiKey());
-  });
+  try {
+    FirebaseBackend.getMapsApiKey().then((key) {
+      Config.setMapsApiKey(key);
+      Maps.MapView.setApiKey(Config.getMapsApiKey());
+    }).catchError((err) {
+      print('Error retrieving maps API key. Printing trace...');
+      print(err.toString());
+    });
+  } catch(e) {
+    print('Error retrieving maps API key. Printing trace...');
+    print(e.toString());
+  }
 
   runApp(new MyApp());
   cameraInit();
@@ -183,19 +191,6 @@ class _LandingScreenState extends State<LandingScreen> {
     this._themeUpdateCallback = _themeUpdateCallback;
   }
 
-  Future<bool> _isConnected() async {
-    try {
-      final result = await InternetAddress.lookup('google.com').timeout(Duration(seconds: 5));
-      if(result.isNotEmpty && result[0].rawAddress.isNotEmpty) {
-        return true;
-      }
-    } on SocketException catch (_) {
-      return false;
-    } on TimeoutException catch (_) {
-      return false;
-    }
-    return false;
-  }
   void _updateUserStatus([user]) async {
     _showLoading = true;
     _first = false;
@@ -206,7 +201,7 @@ class _LandingScreenState extends State<LandingScreen> {
       });
     }
 
-    if(await _isConnected()) {
+    if(await FirebaseBackend.checkBackendOnline()) {
       fuser = await auth.currentUser();
       dynamic checkBlacklisted = await FirebaseBackend.checkBlacklistedVersion(Config.applicationVersion);
 
