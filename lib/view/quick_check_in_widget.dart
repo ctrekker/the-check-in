@@ -93,6 +93,13 @@ class QuickCheckInWidgetState extends State<QuickCheckInWidget> {
   @override
   Widget build(BuildContext context) {
     if(!_initLoading) {
+      if(_qciData.length == 0 || _getButtonText(0)['short'] == '') {
+        return Container(
+          padding: EdgeInsets.only(
+            top: 30.0
+          )
+        );
+      }
       return Container(
         padding: EdgeInsets.only(
           top: 15.0,
@@ -152,7 +159,7 @@ class QuickCheckInWidgetState extends State<QuickCheckInWidget> {
     }
     else {
       _loadQCI();
-      return Container(padding: EdgeInsets.only(top: 15.0));
+      return Container(padding: EdgeInsets.only(top: 30.0));
     }
   }
 }
