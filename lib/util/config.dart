@@ -2,8 +2,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class Config {
   static String _mapsApiKey = '';
-  static String backendProtocol = 'http'; // 'http|https'
-  static String backendUrl =  'tci.burnscoding.com';
+  static String backendProtocol = 'https'; // 'http|https'
+  static String backendUrl =  'tci-dev.burnscoding.com';
   static String applicationVersion = '1.0.0';
   static SharedPreferences prefs;
   static dynamic _settings;
