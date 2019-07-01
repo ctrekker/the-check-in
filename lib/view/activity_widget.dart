@@ -195,27 +195,42 @@ class ActivityWidgetState extends State<ActivityWidget> {
             ],
           ),
           Divider(),
-          Column(
-            children: [
-              RichText(
-                text: TextSpan(
-                  text: 'Mark all as read',
-                  style: Theme.of(context).textTheme.body1.merge(linkTextStyle),
-                  recognizer: TapGestureRecognizer()
-                    ..onTap = () async {
-                      setState(() {
-                        _loadingOverride = true;
-                      });
-                      FirebaseBackend.setActivityViewed(await _user.getIdToken());
-                      setState(() {
-                        _loadingOverride = false;
-                        _loading = true;
-                      });
-                    }
-                )
-              ),
-            ]
-          ),
+          () {
+            if(_loading || _loadingOverride) return Container();
+            bool hasNew = false;
+            for(int i=0; i<_activities.length; i++) {
+              if(_activities[i]['viewed'] == 0) {
+                hasNew = true;
+                break;
+              }
+            }
+            if(hasNew) {
+              return Column(
+                children: [
+                  RichText(
+                    text: TextSpan(
+                      text: 'Mark all as read',
+                      style: Theme.of(context).textTheme.body1.merge(linkTextStyle),
+                      recognizer: TapGestureRecognizer()
+                        ..onTap = () async {
+                          setState(() {
+                            _loadingOverride = true;
+                          });
+                          FirebaseBackend.setActivityViewed(await _user.getIdToken());
+                          setState(() {
+                            _loadingOverride = false;
+                            _loading = true;
+                          });
+                        }
+                    )
+                  ),
+                ]
+              );
+            }
+            else {
+              return Container();
+            }
+          }(),
           () {
             if(!_loading && !_loadingOverride) return _buildActivityList();
             else return Container(
