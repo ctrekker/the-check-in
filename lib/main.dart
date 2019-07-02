@@ -22,6 +22,7 @@ import 'package:the_check_in/view/camera_view.dart';
 import 'package:the_check_in/util/firebase_custom.dart';
 import 'package:the_check_in/view/profile_screen.dart' show ProfileScreen;
 import 'package:map_view/map_view.dart' as Maps;
+import 'package:image_picker/image_picker.dart';
 
 final FirebaseAuth auth = FirebaseAuth.instance;
 FirebaseUser fuser;
@@ -1074,6 +1075,17 @@ class _CheckInAttachmentsState extends State<CheckInAttachments> {
   String _message;
   String _imagePath;
 
+  @override
+  void dispose() async {
+    super.dispose();
+
+    if(image) {
+      File img = File(_imagePath);
+      if(await img.exists()) {
+        await img.delete();
+      }
+    }
+  }
   void _addMessage() {
     _animTimer(() {
       setState(() {
@@ -1082,7 +1094,9 @@ class _CheckInAttachmentsState extends State<CheckInAttachments> {
     });
   }
   void _addImage() async {
-    final imagePath = await Navigator.push(context, MaterialPageRoute(builder: (context) => CameraExampleHome()));
+//    final imagePath = await Navigator.push(context, MaterialPageRoute(builder: (context) => CameraExampleHome()));
+    final imagePath = (await ImagePicker.pickImage(source: ImageSource.camera)).path;
+    print(imagePath);
     _animTimer(() {
       setState(() {
         image = true;
@@ -1102,6 +1116,12 @@ class _CheckInAttachmentsState extends State<CheckInAttachments> {
       setState(() {
         image = false;
       });
+    });
+    File img = File(_imagePath);
+    img.delete().then((res) {
+      // Do nothing. Image deleted properly
+    }).catchError((e) {
+      print('Error: '+e.toString());
     });
   }
 
