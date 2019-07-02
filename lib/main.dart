@@ -18,7 +18,6 @@ import 'package:the_check_in/view/quick_check_in_widget.dart';
 import 'package:the_check_in/view/recipient_selector.dart';
 import 'package:the_check_in/view/settings_screen.dart';
 import 'package:the_check_in/view/user_screen.dart' show UserScreen;
-import 'package:the_check_in/view/camera_view.dart';
 import 'package:the_check_in/util/firebase_custom.dart';
 import 'package:the_check_in/view/profile_screen.dart' show ProfileScreen;
 import 'package:map_view/map_view.dart' as Maps;
@@ -47,7 +46,6 @@ void main() {
   }
 
   runApp(new MyApp());
-  cameraInit();
 }
 
 class AppStateListener with WidgetsBindingObserver {
@@ -1119,15 +1117,15 @@ class _CheckInAttachmentsState extends State<CheckInAttachments> {
     });
   }
   void _addImage() async {
-//    final imagePath = await Navigator.push(context, MaterialPageRoute(builder: (context) => CameraExampleHome()));
-    final imagePath = (await ImagePicker.pickImage(source: ImageSource.camera)).path;
-    print(imagePath);
-    _animTimer(() {
-      setState(() {
-        image = true;
-        _imagePath = imagePath;
+    var imageFile = (await ImagePicker.pickImage(source: ImageSource.camera));
+    if(imageFile != null) {
+      _animTimer(() {
+        setState(() {
+          image = true;
+          _imagePath = imageFile.path;
+        });
       });
-    });
+    }
   }
   void _removeMessage() {
     _animTimer(() {
