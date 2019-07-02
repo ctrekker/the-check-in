@@ -515,32 +515,7 @@ class _LandingScreenState extends State<LandingScreen> {
                         )
                       ),
                       FractionallySizedBox(
-                        widthFactor: 0.05,
-                        child: Container(
-                          padding: EdgeInsets.only(
-                              top: _landscapeScrollOffset
-                          ),
-                          child: SizedBox(
-                            width: 16.0,
-                            child: Center(
-                              child: Container(
-                                width: 0.0,
-                                height: 330.0,
-                                decoration: BoxDecoration(
-                                  border: Border(
-                                    right: BorderSide(
-                                      color: Theme.of(context).dividerColor,
-                                      width: 0.0,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          )
-                        )
-                      ),
-                      FractionallySizedBox(
-                        widthFactor: ratio - 0.05,
+                        widthFactor: ratio,
                         child: Container(
                           padding: EdgeInsets.only(right: 15.0),
                           child: activityWidget
