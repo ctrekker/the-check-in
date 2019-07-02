@@ -17,7 +17,6 @@ class HistoryScreen extends StatefulWidget {
 
 class HistoryScreenState extends State<HistoryScreen> {
   bool _loading = true;
-  bool _error = false;
   FirebaseUser _user;
 
   List<String> _dropdownOptions = ['Your Check-Ins', 'Other\'s Check-Ins', 'Your Check-In Requests', 'Other\'s Check-In Requests'];
@@ -28,7 +27,6 @@ class HistoryScreenState extends State<HistoryScreen> {
   int _page = 0;
   int _quantity = 20;
   int _maxPage = 0;
-  int _buttonCount = 3;
 
   HistoryScreenState(FirebaseUser user) {
     _user = user;
@@ -48,18 +46,12 @@ class HistoryScreenState extends State<HistoryScreen> {
       _listItems =
       await FirebaseBackend.getCheckIns(token, _quantity, _page, queryString)
           .timeout(Duration(seconds: 7));
-      if (!(_listItems is List) && _listItems.type != 'success') {
-        _error = true;
-      }
       BackendStatusResponse maxPageRes = await FirebaseBackend
           .getCheckInsResultCount(token, queryString);
       if (maxPageRes.type == 'success') {
         double _doubleMaxPage = (maxPageRes.raw['resultCount'] / _quantity);
         _maxPage = _doubleMaxPage.floor();
         if (_doubleMaxPage.floor() == _doubleMaxPage.ceil()) _maxPage--;
-      }
-      else {
-        _error = true;
       }
       setState(() {
         _loading = false;
@@ -125,23 +117,6 @@ class HistoryScreenState extends State<HistoryScreen> {
       ),
       onPressed: _hasNextPage()?_nextPage:null,
     ));
-
-//    int offset = (_buttonCount/2).floor();
-//    for(int i=_page-offset; i < _page+offset+1; i++) {
-//      if(i<0&&i<=_maxPage) {
-//        continue;
-//      }
-//      out.add(ButtonTheme(
-//        minWidth: 0.0,
-//        height: 10.0,
-//        child: RaisedButton(
-//          child: Text((i+1).toString()),
-//          onPressed: () {
-//
-//          }
-//        )
-//      ));
-//    }
     return out;
   }
 

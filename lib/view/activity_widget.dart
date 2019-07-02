@@ -5,7 +5,6 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:the_check_in/util/firebase_custom.dart';
 import 'package:the_check_in/util/text_divider.dart';
-import 'package:the_check_in/view/activity_details_screen.dart';
 
 class ActivityWidget extends StatefulWidget {
   FirebaseUser _user;
@@ -69,19 +68,11 @@ class ActivityWidgetState extends State<ActivityWidget> {
               setState(() {
                 _loading = true;
               });
-//              Timer(Duration(milliseconds: 500), () {
-//                _getRecipients();
-//              });
             }
         )
       ];
     }
     else {
-      /*
-      () {
-              Navigator.push(context, MaterialPageRoute(builder: (context) => ActivityDetailsScreen(_activities[i]['message'])));
-            }
-       */
       bool newTag = false;
       bool olderTag = false;
       for (int i = 0; i < _activities.length; i++) {
@@ -134,7 +125,6 @@ class ActivityWidgetState extends State<ActivityWidget> {
               subtitle: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-//                Text(summary),
                   Text(date),
                   () {
                     if(actionText != "") {
@@ -196,7 +186,7 @@ class ActivityWidgetState extends State<ActivityWidget> {
           ),
           Divider(),
           () {
-            if(_loading || _loadingOverride) return Container();
+            if(_loading || _loadingOverride || _activities == null) return Container();
             bool hasNew = false;
             for(int i=0; i<_activities.length; i++) {
               if(_activities[i]['viewed'] == 0) {

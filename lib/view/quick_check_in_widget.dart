@@ -1,8 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:the_check_in/util/firebase_custom.dart';
-import 'package:the_check_in/util/text_divider.dart';
-import 'package:the_check_in/view/activity_details_screen.dart';
 
 class QuickCheckInWidget extends StatefulWidget {
   FirebaseUser _user;
@@ -30,7 +28,6 @@ class QuickCheckInWidgetState extends State<QuickCheckInWidget> {
   void _loadQCI() async {
     String token = await _user.getIdToken();
     _qciData = await FirebaseBackend.getQuickCheckIns(token);
-    print(_qciData);
 
     setState(() {
       _initLoading = false;

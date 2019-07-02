@@ -177,7 +177,6 @@ class RecipientSelectorState extends State<RecipientSelector> {
 
     return Container(
       child: Column(
-//        crossAxisAlignment: CrossAxisAlignment.start,
         children: (){
           List<Widget> out = [
             Text('Recipients', style: Theme.of(context).textTheme.subhead)

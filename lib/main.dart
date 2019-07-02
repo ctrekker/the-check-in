@@ -5,12 +5,11 @@ import 'dart:convert';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:firebase_auth/firebase_auth.dart' show FirebaseAuth, FirebaseUser, PlatformException;
+import 'package:firebase_auth/firebase_auth.dart' show FirebaseAuth, FirebaseUser;
 import 'package:the_check_in/util/config.dart';
 import 'package:location/location.dart';
 import 'dart:async';
 import 'dart:io';
-import 'package:the_check_in/util/rating_widget.dart' show RatingWidget;
 import 'package:the_check_in/util/raised_icon_button.dart' show RaisedIconButton;
 import 'package:the_check_in/view/activity_widget.dart';
 import 'package:the_check_in/view/history_screen.dart';
@@ -74,22 +73,8 @@ class _MyAppState extends State<MyApp> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(AppStateListener());
-
-    //initPlatformState();
-
-//    _locationSubscription =
-//        _location.onLocationChanged().listen((Map<String,double> result) {
-//          setState(() {
-//            _currentLocation = result;
-//          });
-//        });
   }
-  Map<String, double> _startLocation;
-  Map<String, double> _currentLocation;
 
-  StreamSubscription<Map<String, double>> _locationSubscription;
-
-  bool _permission;
   String error;
   Location _location = new Location();
 
@@ -100,7 +85,7 @@ class _MyAppState extends State<MyApp> {
     // Platform messages may fail, so we use a try/catch PlatformException.
 
     try {
-      _permission = await _location.hasPermission();
+      await _location.hasPermission();
       location = await _location.getLocation();
 
       print(location);
@@ -211,7 +196,6 @@ class _LandingScreenState extends State<LandingScreen> {
       }
       else if (fuser != null) {
         String token = await fuser.getIdToken();
-        print(token);
         FirebaseBackend.setTimezone(token, DateTime.now().timeZoneOffset.inHours.toString()+":"+DateTime.now().timeZoneName);
         Config.settingsListeners.add((settings) {
           _themeUpdateCallback();
@@ -232,9 +216,9 @@ class _LandingScreenState extends State<LandingScreen> {
         );
         _firebaseMessaging.requestNotificationPermissions(
             const IosNotificationSettings(sound: true, badge: true, alert: true));
-        _firebaseMessaging.getToken().then((fcm_token) async {
+        _firebaseMessaging.getToken().then((fcmToken) async {
           await FirebaseBackend.updateFcmToken(
-              await fuser.getIdToken(), fcm_token);
+              await fuser.getIdToken(), fcmToken);
         });
       }
       else {
@@ -322,8 +306,7 @@ class _LandingScreenState extends State<LandingScreen> {
     }
 
     if(_first) {
-      //_updateUserStatus();
-      auth.onAuthStateChanged.listen((FirebaseUser) => _updateUserStatus());
+      auth.onAuthStateChanged.listen((FirebaseUser u) => _updateUserStatus());
     }
 
     double padding = 30.0;
@@ -632,7 +615,6 @@ class _CheckInScreenState extends State<CheckInScreen> {
   bool _loading = false;
   bool _init = true;
 
-  RatingWidget _ratingWidget = RatingWidget();
   CheckInAttachments _attachmentsWidget = CheckInAttachments();
   RecipientSelector _recipientWidget;
   bool _shareLocationValue = false;
@@ -668,7 +650,7 @@ class _CheckInScreenState extends State<CheckInScreen> {
   void _updateLocationPermission({bool state=false}) async {
     try {
       _locationPermission = await _location.hasPermission();
-    } on PlatformException catch(e) {
+    } on PlatformException {
       _locationPermission = false;
     }
     if(state) {

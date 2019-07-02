@@ -1,7 +1,5 @@
-import 'dart:async';
-
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class ProfileScreen extends StatefulWidget {
   FirebaseUser _user;
@@ -17,18 +15,9 @@ class ProfileScreenState extends State<ProfileScreen> {
   FirebaseUser _user;
   bool _loading = false;
 
-
-
   ProfileScreenState(FirebaseUser user) {
     _user = user;
   }
-
-//  void _loadProfile() async {
-//    setState(() {
-//      _displayName = _user.displayName;
-//      _email = _user.email;
-//    });
-//  }
 
   @override
   Widget build(BuildContext context) {
@@ -36,7 +25,6 @@ class ProfileScreenState extends State<ProfileScreen> {
       title: Text('Profile')
     );
     if(_loading) {
-//      Timer(Duration(milliseconds: 200), () => _loadProfile());
       return Scaffold(
         appBar: appBar,
         body: Center(

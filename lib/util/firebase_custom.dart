@@ -32,7 +32,7 @@ class FirebaseBackend {
 
       request.bodyFields = {};
 
-      http.StreamedResponse response = await client.send(request).timeout(Duration(seconds: 5));
+      await client.send(request).timeout(Duration(seconds: 5));
       return true;
     } on SocketException catch (_) {
       return false;
@@ -74,9 +74,8 @@ class FirebaseBackend {
     http.Client client = new http.Client();
     http.Request request = new http.Request('POST', getBackendUri('/user/device/fcm'));
 
-    String device_id = await getDeviceId(token, force: force);
-    print('device_id: '+device_id);
-    request.bodyFields = {'token': token, 'device_id': device_id, 'fcm_token': fcmToken};
+    String deviceId = await getDeviceId(token, force: force);
+    request.bodyFields = {'token': token, 'device_id': deviceId, 'fcm_token': fcmToken};
 
     http.StreamedResponse response = await client.send(request);
     String jsonStr = await response.stream.bytesToString();
