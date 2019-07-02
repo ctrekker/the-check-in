@@ -12,16 +12,14 @@ class RaisedLoaderButton extends StatelessWidget {
     List<Widget> contents = [];
     if(showLoading) {
       contents.addAll([
-        CircularProgressIndicator(
-
-        ),
+        CircularProgressIndicator(),
         Container(padding: EdgeInsets.only(left: 5.0))
       ]);
     }
     contents.add(Text(text));
     return RaisedButton(
       child: Row(
-          children: contents
+        children: contents
       ),
       onPressed: onPressed,
     );

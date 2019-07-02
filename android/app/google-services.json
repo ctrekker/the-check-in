@@ -1,0 +1,42 @@
+{
+  "project_info": {
+    "project_number": "1058043802315",
+    "firebase_url": "https://health-check-4.firebaseio.com",
+    "project_id": "health-check-4",
+    "storage_bucket": "health-check-4.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1058043802315:android:709dcd2499ac96a5",
+        "android_client_info": {
+          "package_name": "com.burnscoding.healthcheck"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1058043802315-r4n0eqrd1b78tf6lt4facrmttnd72jft.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBU718WXBZ9wNDGivwXp-J60DhCswNX7Kk"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

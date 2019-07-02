@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart' show FirebaseAuth, FirebaseUser, PlatformException;
+import 'package:firebase_auth/firebase_auth.dart' show FirebaseAuth;
 import 'package:the_check_in/util/firebase_custom.dart';
 
 final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -20,9 +20,6 @@ class _AddRecipientDialogState extends State<AddRecipientDialog> {
 
   bool _hasEmail = false;
   bool _hasPhone = false;
-
-  //FocusNode _emailFocus = FocusNode();
-  //FocusNode _phoneFocus = FocusNode();
 
   bool _isEmail(String em) {
     String p = r'^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$';
@@ -70,13 +67,9 @@ class _AddRecipientDialogState extends State<AddRecipientDialog> {
   @override
   void initState() {
     super.initState();
-//    _emailFocus = FocusNode();
-//    _phoneFocus = FocusNode();
   }
   @override
   void dispose() {
-//    _emailFocus.dispose();
-//    _phoneFocus.dispose();
     super.dispose();
   }
 
@@ -110,7 +103,6 @@ class _AddRecipientDialogState extends State<AddRecipientDialog> {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: <Widget>[
                     TextFormField(
-//                      focusNode: _emailFocus,
                       keyboardType: TextInputType.emailAddress,
                       decoration: InputDecoration(
                         hintText: 'them@example.com',
@@ -138,7 +130,6 @@ class _AddRecipientDialogState extends State<AddRecipientDialog> {
                   child: Text('Add Email'),
                   onPressed: () {
                     setState(() {
-//                      FocusScope.of(context).requestFocus(_emailFocus);
                       _hasEmail = true;
                     });
                   }
@@ -151,7 +142,6 @@ class _AddRecipientDialogState extends State<AddRecipientDialog> {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: <Widget>[
                     TextFormField(
-//                      focusNode: _phoneFocus,
                       keyboardType: TextInputType.phone,
                       decoration: InputDecoration(
                         labelText: 'Recipient Phone Number'
@@ -175,7 +165,6 @@ class _AddRecipientDialogState extends State<AddRecipientDialog> {
                   child: Text('Add Phone'),
                   onPressed: () {
                     setState(() {
-//                      FocusScope.of(context).requestFocus(_phoneFocus);
                       _hasPhone = true;
                     });
                   }

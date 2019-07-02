@@ -3,10 +3,8 @@ import 'dart:convert';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:the_check_in/util/config.dart';
 import 'package:the_check_in/util/firebase_custom.dart';
 import 'package:the_check_in/util/spacer.dart' show SpacerBC;
-import 'package:map_view/map_view.dart';
 
 class SettingsScreen extends StatefulWidget {
   FirebaseUser _user;

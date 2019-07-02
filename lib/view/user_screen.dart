@@ -1,6 +1,6 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart' show FirebaseAuth, FirebaseUser, PlatformException;
+import 'package:firebase_auth/firebase_auth.dart' show FirebaseAuth, FirebaseUser;
 import 'dart:async';
 import 'package:the_check_in/main.dart' show auth, appTitle;
 import 'package:the_check_in/util/firebase_custom.dart';
@@ -14,7 +14,6 @@ class _UserScreenState extends State<UserScreen> with SingleTickerProviderStateM
   final _scaffoldKey = GlobalKey<ScaffoldState>();
   final _siFormKey = GlobalKey<FormState>();
   final _suFormKey = GlobalKey<FormState>();
-  final _minPasswordLength = 6;
 
   TabController _tabController;
 
@@ -78,7 +77,7 @@ class _UserScreenState extends State<UserScreen> with SingleTickerProviderStateM
       status = await FirebaseBackend.createUserWithEmailAndPassword(_email, _password, _name);
 
       if(status.type == 'success') {
-        FirebaseUser user = await auth.signInWithEmailAndPassword(email: _email, password: _password);
+        await auth.signInWithEmailAndPassword(email: _email, password: _password);
         _scaffoldKey.currentState.showSnackBar(
           SnackBar(content: Text('Successfully created account',
               style: Theme.of(context).textTheme.body1.merge(TextStyle(color: Colors.white))))
