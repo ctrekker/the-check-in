@@ -802,7 +802,7 @@ router.post('/version/:versionTag/checkBlacklisted', function(req, res) {
         [req.params.versionTag],
         function(err, results, fields) {
             if(err) {
-                responses.get('GENERIC_DB_ERROR', {}, err, decodedToken.uid, req);
+                responses.get('GENERIC_DB_ERROR', {}, err, null, req);
             }
             else {
                 if(results.length > 0) {
