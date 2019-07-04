@@ -21,12 +21,44 @@ import 'package:the_check_in/util/firebase_custom.dart';
 import 'package:the_check_in/view/profile_screen.dart' show ProfileScreen;
 import 'package:map_view/map_view.dart' as Maps;
 import 'package:image_picker/image_picker.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 final FirebaseAuth auth = FirebaseAuth.instance;
 FirebaseUser fuser;
 
 
-final Text appTitle = Text('The Check In');
+Widget appTitle = Row(
+  children: [
+    Text('The Check In'),
+    Container(
+      padding: EdgeInsets.only(left: 14.0)
+    ),
+    Container(
+      padding: EdgeInsets.all(5.0),
+      child: Text('Alpha', style: TextStyle(fontSize: 14.0)),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(6.0),
+        color: Colors.red
+      ),
+    ),
+    Container(
+      padding: EdgeInsets.only(left: 20.0)
+    ),
+    SizedBox(
+      child: ButtonTheme(
+        padding: EdgeInsets.all(10.0),
+        height: 40.0,
+        buttonColor: Color.fromRGBO(0, 0, 255, 0.1),
+        child: RaisedButton(
+          child: Text('Report a bug', style: TextStyle(fontSize: 14.0, color: Colors.white)),
+          onPressed: () {
+            launch("https://burnscoding.myjetbrains.com/youtrack/newIssue");
+          },
+        )
+      )
+    )
+  ]
+);
 
 void main() {
   Config.init();
