@@ -47,10 +47,10 @@ class ActivityDetailsScreenState extends State<ActivityDetailsScreen> {
       if(elementData.containsKey('image_url')) {
         columnWidgets.add(CachedNetworkImage(
           imageUrl: elementData['image_url'],
-          placeholder: Center(
+          placeholder: (context, url) => Center(
             child: CircularProgressIndicator()
           ),
-          errorWidget: Icon(Icons.error),
+          errorWidget: (context, url, error) => Icon(Icons.error),
         ));
       }
       if(elementData.containsKey('location')) {
@@ -67,10 +67,10 @@ class ActivityDetailsScreenState extends State<ActivityDetailsScreen> {
         columnWidgets.add(GestureDetector(
           child: CachedNetworkImage(
             imageUrl: mapUri.toString(),
-            placeholder: Center(
+            placeholder: (context, url) => Center(
               child: CircularProgressIndicator()
             ),
-            errorWidget: Icon(Icons.error)
+            errorWidget: (context, url, error) => Icon(Icons.error)
           ),
           onTap: () {
             Maps.MapView _mapView = new Maps.MapView();

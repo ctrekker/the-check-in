@@ -1,0 +1,20 @@
+## Flutter wrapper
+-keep class io.flutter.app.** { *; }
+-keep class io.flutter.plugin.**  { *; }
+-keep class io.flutter.util.**  { *; }
+-keep class io.flutter.view.**  { *; }
+-keep class io.flutter.**  { *; }
+-keep class io.flutter.plugins.**  { *; }
+-keep class com.google.firebase.** { *; }
+-keep class com.google.android.** { *; }
+-keep class com.google.common.** { *; }
+-keep class com.google.protobuf.** { *; }
+-keep class com.google.** { *; }
+-keep class io.grpc.** { *; }
+-keep class okio.** { *; }
+-keep class com.squareup.** { *; }
+-keep class io.opencensus.** { *; }
+-keep class android.** { *; }
+-keep class androidx.** { *; }
+-dontwarn com.google.android.gms.**
+-keepattributes Signature,InnerClasses
