@@ -420,7 +420,12 @@ router.post('/checkIn', function(req, res) {
             function(err, results, fields) {
                 var checkinId = -1;
                 if (!err) {
-                    checkinId = results[0]['id'] + 1;
+                    if(results.length === 0) {
+                        checkinId = 1;
+                    }
+                    else {
+                        checkinId = results[0]['id'] + 1;
+                    }
                     info.checkinId = checkinId;
                 }
                 else {
